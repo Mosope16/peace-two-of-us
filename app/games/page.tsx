@@ -150,10 +150,10 @@ export default function GamesHubPage() {
       </section>
 
       {/* Main Game Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
-        {/* 1. Know Me Quiz Card */}
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+        {/* 1. How Well Do You Know Me? */}
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group bg-gradient-to-b from-rose-950/20 to-zinc-900">
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/30 text-white font-bold">
               <Gamepad2 className="w-6 h-6" />
@@ -161,21 +161,16 @@ export default function GamesHubPage() {
 
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-xl font-bold text-white group-hover:text-rose-300 transition-colors">Know Me Quiz</h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  17 Categories
-                </span>
+                <h2 className="text-xl font-bold text-white group-hover:text-rose-300 transition-colors">How Well Do You Know Me?</h2>
               </div>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Test how deeply you understand each other across 17 categories including Long Distance, Pop Culture, Spicy 18+, Deep, and Hot Takes.
+                One partner answers privately, the other guesses! Switch roles and compare scores at the end.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 pt-2">
-              <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">✈️ LDR</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-300 border border-red-500/20">🔥 18+ Spicy</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">👉 Most Likely</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">+14 more</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">Turn-Based</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">17 Categories</span>
             </div>
           </div>
 
@@ -183,53 +178,131 @@ export default function GamesHubPage() {
             href="/games/know-me"
             className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
           >
-            <span>Play Know Me Quiz</span>
+            <span>Play Know Me</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* 2. IQ Duel Card */}
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-purple-500/20 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+        {/* 2. This or That */}
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-amber-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group bg-gradient-to-b from-amber-950/20 to-zinc-900">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 text-white font-bold">
+              <Zap className="w-6 h-6" />
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-xl font-bold text-white group-hover:text-amber-300 transition-colors">This or That</h2>
+              </div>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                Both choose independently between two options. Reveal together for instant 🎉 Match bonuses!
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">Match Answers</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Quick Rounds</span>
+            </div>
+          </div>
+
+          <Link
+            href="/games/this-or-that"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+          >
+            <span>Play This or That</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* 3. Would You Rather */}
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-purple-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group bg-gradient-to-b from-purple-950/20 to-zinc-900">
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/30 text-white font-bold">
+              <HelpCircle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">Would You Rather</h2>
+              </div>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                Choose between wild &amp; romantic relationship scenarios. Compare choices together!
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">Scenarios</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Fun Topics</span>
+            </div>
+          </div>
+
+          <Link
+            href="/games/would-you-rather"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+          >
+            <span>Play Would You Rather</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* 4. Compatibility Quiz */}
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-pink-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group bg-gradient-to-b from-pink-950/20 to-zinc-900">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/30 text-white font-bold">
+              <Award className="w-6 h-6" />
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-xl font-bold text-white group-hover:text-pink-300 transition-colors">Compatibility Quiz</h2>
+              </div>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                Answer relationship &amp; lifestyle questions to uncover your overall couple compatibility percentage!
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/20">% Score Breakdown</span>
+            </div>
+          </div>
+
+          <Link
+            href="/games/compatibility"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+          >
+            <span>Take Compatibility Quiz</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* 5. IQ Duel */}
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-indigo-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-bold">
               <Brain className="w-6 h-6" />
             </div>
 
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">IQ Duel</h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  Timed Battle
-                </span>
+                <h2 className="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors">IQ Duel</h2>
               </div>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Competitive intelligence challenge! Lock in answers privately with per-question countdown clocks. Reveals happen at the end with double points on the final question!
+                Competitive intelligence battle! Per-question clocks and double points on the final round.
               </p>
-            </div>
-
-            <div className="space-y-1.5 pt-2 text-[11px] text-zinc-300">
-              <div className="flex items-center space-x-2 text-zinc-400">
-                <Lock className="w-3.5 h-3.5 text-purple-400" />
-                <span>🔒 Private lock-in — answer secretly</span>
-              </div>
-              <div className="flex items-center space-x-2 text-zinc-400">
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>⏱️ Per-question timers &amp; 👑 2x final Q</span>
-              </div>
             </div>
           </div>
 
           <Link
             href="/games/iq-duel"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
           >
-            <span>Enter IQ Duel</span>
+            <span>Play IQ Duel</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* 3. Riddle Night Card */}
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-emerald-500/20 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+        {/* 6. Riddle Night */}
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-emerald-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group">
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white font-bold">
               <HelpCircle className="w-6 h-6" />
@@ -238,17 +311,10 @@ export default function GamesHubPage() {
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors">Riddle Night</h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Co-op &amp; Race
-                </span>
               </div>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Mind-bending romantic riddles and logic puzzles to crack together over video calls or race to solve first!
+                Solve love &amp; LDR riddles together to earn achievement badges.
               </p>
-            </div>
-
-            <div className="pt-2 text-[11px] text-emerald-300 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
-              💡 Interactive hint unlocks &amp; instant answer checkers.
             </div>
           </div>
 
@@ -256,7 +322,7 @@ export default function GamesHubPage() {
             href="/games/riddle-night"
             className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
           >
-            <span>Solve Riddles</span>
+            <span>Play Riddle Night</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

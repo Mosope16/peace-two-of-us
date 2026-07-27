@@ -12,6 +12,7 @@ export default function LoginPage() {
   const { setAuthenticatedUser, pairWithCode } = useLDRStore();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [coupleMode, setCoupleMode] = useState<'create' | 'join'>('create');
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -32,18 +33,26 @@ export default function LoginPage() {
       if (mode === 'signup') {
         if (!name.trim()) throw new Error('Please enter your full name');
         if (!email.trim() || !password.trim()) throw new Error('Please fill in email and password');
-
-        const { user, couple } = await signUpUser(name, email, password, username);
-        
-        // If partner invite code was provided during signup, attempt linking
-        if (inviteCode.trim()) {
-          await linkPartnerWithInviteCode(inviteCode, user.id);
-          pairWithCode(inviteCode);
+        if (coupleMode === 'join' && !inviteCode.trim()) {
+          throw new Error('Please enter your partner\'s Room Code (e.g. A8XK-91PQ)');
         }
 
-        setAuthenticatedUser(user, null, couple);
-        setSuccessMsg('Account created successfully! Redirecting to couple dashboard...');
-        setTimeout(() => router.push('/dashboard'), 1200);
+        const { user, partner, couple } = await signUpUser(
+          name,
+          email,
+          password,
+          username,
+          coupleMode,
+          inviteCode
+        );
+
+        setAuthenticatedUser(user, partner, couple);
+        setSuccessMsg(
+          coupleMode === 'join' && partner
+            ? `Successfully connected with ${partner.name}! Redirecting to dashboard...`
+            : `Room created! Your Room ID is ${couple.invite_code}. Share it with your partner!`
+        );
+        setTimeout(() => router.push('/dashboard'), 1500);
 
       } else {
         if (!email.trim() || !password.trim()) throw new Error('Please enter email and password');
@@ -174,22 +183,60 @@ export default function LoginPage() {
           </div>
 
           {mode === 'signup' && (
-            <div className="pt-2 border-t border-zinc-800">
-              <label className="block text-xs font-semibold text-zinc-300 mb-1 flex items-center justify-between">
-                <span>Partner's Invite Code (Optional)</span>
-                <span className="text-[10px] text-rose-400">e.g. LDR-892</span>
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
-                <input
-                  type="text"
-                  placeholder="e.g. LDR-892"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-rose-500 text-white font-mono uppercase text-xs focus:outline-none transition-colors tracking-widest"
-                />
+            <div className="pt-2 border-t border-zinc-800 space-y-3">
+              <label className="block text-xs font-semibold text-zinc-300">Couple Setup</label>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCoupleMode('create')}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
+                    coupleMode === 'create'
+                      ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Create Couple</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCoupleMode('join')}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
+                    coupleMode === 'join'
+                      ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Join Couple</span>
+                </button>
               </div>
-              <p className="text-[10px] text-zinc-500 mt-1">If your partner already signed up, enter their code to connect accounts!</p>
+
+              {coupleMode === 'create' ? (
+                <p className="text-[10px] text-zinc-400 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                  ✨ Generates a new Room ID (e.g. <span className="font-mono text-rose-300">A8XK-91PQ</span>) for your relationship space.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-semibold text-rose-300">
+                    Partner's Room Code <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+                    <input
+                      type="text"
+                      placeholder="e.g. A8XK-91PQ"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-rose-500/40 focus:border-rose-500 text-white font-mono uppercase text-xs focus:outline-none transition-colors tracking-widest"
+                      required
+                    />
+                  </div>
+                  <p className="text-[10px] text-zinc-400">Enter the 8-character Room ID provided by your partner.</p>
+                </div>
+              )}
             </div>
           )}
 

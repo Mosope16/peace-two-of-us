@@ -14,6 +14,7 @@ export interface User {
   username?: string;
   email: string;
   avatar: string;
+  couple_id?: string;
   created_at: string;
 }
 
@@ -159,10 +160,45 @@ export interface RiddleProgress {
 export interface LiveGameRoom {
   roomCode: string;
   couple_id: string;
-  gameType: 'know-me' | 'iq-duel' | 'riddle-night';
+  gameType: 'know-me' | 'iq-duel' | 'riddle-night' | 'this-or-that' | 'would-you-rather' | 'compatibility';
   category?: QuizCategoryId;
   hostUserId: string;
   status: 'waiting' | 'in_progress' | 'completed';
+  created_at: string;
+}
+
+export type MVPGameType = 'know-me' | 'this-or-that' | 'would-you-rather' | 'compatibility';
+
+export interface MVPGameQuestion {
+  id: string;
+  game_type: MVPGameType;
+  question: string;
+  options: string[];
+  category?: string;
+}
+
+export interface GameSession {
+  id: string;
+  couple_id: string;
+  game_type: MVPGameType;
+  status: 'invited' | 'in_progress' | 'completed';
+  current_round: number;
+  subject_user_id: string;
+  guessing_user_id: string;
+  created_at: string;
+}
+
+export interface GameAnswer {
+  id: string;
+  session_id: string;
+  question_id: string;
+  question_text: string;
+  subject_user_id: string;
+  subject_answer?: string;
+  guessing_user_id?: string;
+  guess_answer?: string;
+  is_correct?: boolean;
+  is_match?: boolean;
   created_at: string;
 }
 

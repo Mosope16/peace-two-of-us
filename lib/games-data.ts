@@ -699,3 +699,35 @@ export const RIDDLES_DATA: Riddle[] = [
     category: 'Love & Romance',
   },
 ];
+
+export const THIS_OR_THAT_QUESTIONS = [
+  { id: 'tot-1', question: 'Coffee or Tea?', options: ['☕ Coffee', '🍵 Tea'] },
+  { id: 'tot-2', question: 'Cats or Dogs?', options: ['🐱 Cats', '🐶 Dogs'] },
+  { id: 'tot-3', question: 'Netflix Night or Nightclub Party?', options: ['🎬 Netflix & Chill', '🪩 Party Nightclub'] },
+  { id: 'tot-4', question: 'Pizza or Burgers?', options: ['🍕 Cheesy Pizza', '🍔 Juicy Burger'] },
+  { id: 'tot-5', question: 'Beach Holiday or Mountain Cabin?', options: ['🏖️ Sunny Beach', '⛰️ Cozy Cabin'] },
+  { id: 'tot-6', question: 'Early Morning Bird or Late Night Owl?', options: ['🌅 Early Bird', '🌙 Night Owl'] },
+  { id: 'tot-7', question: 'Sweet Snacks or Savory Treats?', options: ['🍦 Sweet Dessert', '🍿 Savory Snacks'] },
+  { id: 'tot-8', question: 'Road Trip or Flight Getaway?', options: ['🚗 Scenic Road Trip', '✈️ Fast Flight'] },
+  { id: 'tot-9', question: 'Cook at Home or Order Takeout?', options: ['👩‍🍳 Cook Together', '📱 Order Takeout'] },
+  { id: 'tot-10', question: 'Texting All Day or 1 Long Video Call?', options: ['💬 Constant Texting', '📹 Nightly Video Call'] },
+];
+
+export const WOULD_YOU_RATHER_QUESTIONS = [
+  { id: 'wyr-1', question: 'Would you rather have a cozy home movie date or a fancy candlelit dinner?', options: ['🛋️ Home Movie Date', '🕯️ Fancy Dinner'] },
+  { id: 'wyr-2', question: 'Would you rather live in a bustling metropolis or a quiet seaside town?', options: ['🏙️ Big City', '🌊 Seaside Town'] },
+  { id: 'wyr-3', question: 'Would you rather travel 100 years into the past or 100 years into the future?', options: ['⏳ 100 Years Past', '🚀 100 Years Future'] },
+  { id: 'wyr-4', question: 'Would you rather have infinite free coffee or infinite free flights to see each other?', options: ['☕ Infinite Coffee', '✈️ Unlimited Flights'] },
+  { id: 'wyr-5', question: 'Would you rather receive surprise flowers or a hand-written love letter?', options: ['💐 Surprise Flowers', '💌 Hand-written Letter'] },
+  { id: 'wyr-6', question: 'Would you rather spend a rainy weekend sleeping in or exploring a new city?', options: ['🛌 Cozy Sleep-in', '🌆 Explore City'] },
+  { id: 'wyr-7', question: 'Would you rather be able to read minds or telepathically talk only to your partner?', options: ['🧠 Read All Minds', '💞 Partner Telepathy'] },
+];
+
+export const COMPATIBILITY_QUESTIONS = [
+  { id: 'cmp-1', question: 'How do you handle disagreement during long-distance calls?', options: ['Talk it out immediately', 'Take 30 mins space first', 'Send a thoughtful text', 'Sleep on it'] },
+  { id: 'cmp-2', question: 'What is your primary Love Language?', options: ['Words of Affirmation', 'Quality Time (Calls)', 'Receiving Gifts', 'Physical Touch / Reunions'] },
+  { id: 'cmp-3', question: 'What is your ideal reunion celebration on Airport Day?', options: ['Quiet hug & cozy home date', 'Fancy restaurant dinner', 'Weekend surprise getaway', 'Party with friends'] },
+  { id: 'cmp-4', question: 'How often do you like to check in throughout a busy workday?', options: ['Every couple hours', 'Morning & Goodnight only', 'Non-stop text stream', 'Whenever free'] },
+  { id: 'cmp-5', question: 'Where would you prefer to settle down together in the future?', options: ['Hometown near family', 'Exciting new foreign city', 'Peaceful countryside', 'Coastal beach town'] },
+];
+

@@ -10,11 +10,13 @@ CREATE TABLE IF NOT EXISTS public.users (
   username TEXT UNIQUE,
   email TEXT UNIQUE NOT NULL,
   avatar TEXT,
+  couple_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Ensure username column exists if table already existed previously
+-- Ensure username and couple_id columns exist if table already existed previously
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS couple_id UUID;
 
 -- 2. COUPLES TABLE
 CREATE TABLE IF NOT EXISTS public.couples (
@@ -82,6 +84,33 @@ CREATE TABLE IF NOT EXISTS public.countdowns (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 8. GAME SESSIONS TABLE
+CREATE TABLE IF NOT EXISTS public.game_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  couple_id UUID REFERENCES public.couples(id) ON DELETE CASCADE NOT NULL,
+  game_type TEXT NOT NULL,
+  status TEXT DEFAULT 'invited' NOT NULL,
+  current_round INT DEFAULT 1 NOT NULL,
+  subject_user_id UUID REFERENCES public.users(id),
+  guessing_user_id UUID REFERENCES public.users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 9. GAME ANSWERS TABLE
+CREATE TABLE IF NOT EXISTS public.game_answers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id UUID REFERENCES public.game_sessions(id) ON DELETE CASCADE NOT NULL,
+  question_id TEXT NOT NULL,
+  question_text TEXT NOT NULL,
+  subject_user_id UUID REFERENCES public.users(id),
+  subject_answer TEXT,
+  guessing_user_id UUID REFERENCES public.users(id),
+  guess_answer TEXT,
+  is_correct BOOLEAN,
+  is_match BOOLEAN,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.couples ENABLE ROW LEVEL SECURITY;
@@ -90,6 +119,8 @@ ALTER TABLE public.love_letters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.moods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bucket_list ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.countdowns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.game_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.game_answers ENABLE ROW LEVEL SECURITY;
 
 -- Drop Existing Policies (prevents 42710 already exists errors on re-run)
 DROP POLICY IF EXISTS "Allow public read access to users" ON public.users;
@@ -113,6 +144,12 @@ DROP POLICY IF EXISTS "Allow public insert/update to bucket_list" ON public.buck
 DROP POLICY IF EXISTS "Allow public read access to countdowns" ON public.countdowns;
 DROP POLICY IF EXISTS "Allow public insert to countdowns" ON public.countdowns;
 
+DROP POLICY IF EXISTS "Allow public read access to game_sessions" ON public.game_sessions;
+DROP POLICY IF EXISTS "Allow public insert/update to game_sessions" ON public.game_sessions;
+
+DROP POLICY IF EXISTS "Allow public read access to game_answers" ON public.game_answers;
+DROP POLICY IF EXISTS "Allow public insert/update to game_answers" ON public.game_answers;
+
 -- Create Idempotent RLS Policies
 CREATE POLICY "Allow public read access to users" ON public.users FOR SELECT USING (true);
 CREATE POLICY "Allow public insert/update to users" ON public.users FOR ALL USING (true);
@@ -134,3 +171,9 @@ CREATE POLICY "Allow public insert/update to bucket_list" ON public.bucket_list 
 
 CREATE POLICY "Allow public read access to countdowns" ON public.countdowns FOR SELECT USING (true);
 CREATE POLICY "Allow public insert to countdowns" ON public.countdowns FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public read access to game_sessions" ON public.game_sessions FOR SELECT USING (true);
+CREATE POLICY "Allow public insert/update to game_sessions" ON public.game_sessions FOR ALL USING (true);
+
+CREATE POLICY "Allow public read access to game_answers" ON public.game_answers FOR SELECT USING (true);
+CREATE POLICY "Allow public insert/update to game_answers" ON public.game_answers FOR ALL USING (true);
