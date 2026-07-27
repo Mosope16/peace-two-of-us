@@ -54,7 +54,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
           <div className="px-6 py-3 rounded-xl bg-zinc-950 border border-rose-500/30 font-mono text-2xl font-black text-rose-300 tracking-widest">
             {couple.invite_code}
           </div>
@@ -65,6 +65,18 @@ export default function SettingsPage() {
             {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Copied!' : 'Copy Code'}</span>
           </button>
+
+          {couple.is_connected && couple.partner_two ? (
+            <div className="px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Connected with {couple.partner_two.name} ❤️</span>
+            </div>
+          ) : (
+            <div className="px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Waiting for partner to join...</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -23,12 +23,12 @@ import { MoodType } from '@/types';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { currentUser, partner, moods, activePartnerId, switchActiveUser, logoutUser, setMood } = useLDRStore();
+  const { currentUser, partner, couple, moods, logoutUser, setMood } = useLDRStore();
   const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const activeMoodLog = moods[currentUser.id];
-  const partnerMoodLog = moods[partner?.id || ''];
+  const partnerMoodLog = partner && couple.is_connected ? moods[partner.id] : null;
   const partnerMoodDetails = partnerMoodLog ? getMoodDetails(partnerMoodLog.mood) : null;
 
   const navLinks = [

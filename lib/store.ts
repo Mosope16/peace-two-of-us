@@ -69,10 +69,10 @@ const DEFAULT_USER_2: User = {
 const INITIAL_COUPLE: Couple = {
   id: 'couple-space-1',
   partner_one: DEFAULT_USER_1,
-  partner_two: DEFAULT_USER_2,
+  partner_two: null,
   relationship_start_date: new Date().toISOString(),
   invite_code: 'LDR-742',
-  is_connected: true,
+  is_connected: false,
 };
 
 const INITIAL_MEMORIES: Memory[] = [];
@@ -373,7 +373,7 @@ export const useLDRStore = create<LDRState>()(
       },
     }),
     {
-      name: 'ldr-app-storage-v7',
+      name: 'ldr-app-storage-v8',
     }
   )
 );
