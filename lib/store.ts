@@ -69,7 +69,7 @@ const INITIAL_COUPLE: Couple = {
   partner_one: DEFAULT_USER_1,
   partner_two: DEFAULT_USER_2,
   relationship_start_date: new Date().toISOString(),
-  invite_code: generateInviteCode(),
+  invite_code: 'LDR-742',
   is_connected: true,
 };
 

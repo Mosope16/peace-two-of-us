@@ -113,7 +113,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-xs sm:text-sm text-rose-300 font-medium flex items-center space-x-1.5 mt-1">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Connected &bull; Invite Code: <span className="font-mono font-bold text-white bg-rose-500/20 px-1.5 py-0.5 rounded">{couple.invite_code}</span></span>
+                <span>Connected &bull; Invite Code: <span className="font-mono font-bold text-white bg-rose-500/20 px-1.5 py-0.5 rounded" suppressHydrationWarning>{couple.invite_code}</span></span>
               </p>
             </div>
           </div>
