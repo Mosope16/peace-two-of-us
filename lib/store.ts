@@ -289,11 +289,11 @@ export const useLDRStore = create<LDRState>()(
         const currentUserId = get().currentUser.id;
         const answerKey = `${currentUserId}_${questionId}`;
         const newAnswer: IQDuelAnswer = {
-          questionId,
-          userId: currentUserId,
-          selectedIndex,
-          timeTaken,
-          timestamp: new Date().toISOString(),
+          question_id: questionId,
+          user_id: currentUserId,
+          selected_index: selectedIndex,
+          time_taken: timeTaken,
+          is_locked: true,
         };
 
         set((state) => {
