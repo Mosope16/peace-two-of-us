@@ -4,6 +4,7 @@ import { User, Couple, Memory, LoveLetter, MoodLog, BucketItem, Countdown, MoodT
 import { generateInviteCode } from './auth';
 
 interface LDRState {
+  isAuthenticated: boolean;
   currentUser: User;
   partner: User;
   couple: Couple;
@@ -82,6 +83,7 @@ const INITIAL_COUNTDOWNS: Countdown[] = [];
 export const useLDRStore = create<LDRState>()(
   persist(
     (set, get) => ({
+      isAuthenticated: false,
       currentUser: DEFAULT_USER_1,
       partner: DEFAULT_USER_2,
       couple: INITIAL_COUPLE,
@@ -100,6 +102,7 @@ export const useLDRStore = create<LDRState>()(
 
       setAuthenticatedUser: (user: User, partnerUser: User | null, coupleData: Couple) => {
         set({
+          isAuthenticated: true,
           currentUser: user,
           partner: partnerUser || {
             id: 'waiting-partner',
@@ -115,6 +118,7 @@ export const useLDRStore = create<LDRState>()(
 
       logoutUser: () => {
         set({
+          isAuthenticated: false,
           currentUser: DEFAULT_USER_1,
           partner: DEFAULT_USER_2,
           couple: INITIAL_COUPLE,
@@ -233,11 +237,22 @@ export const useLDRStore = create<LDRState>()(
       },
 
       pairWithCode: (code: string) => {
-        const currentCouple = get().couple;
-        if (code.trim().toUpperCase() === currentCouple.invite_code.toUpperCase() || code.length >= 6) {
+        const cleanCode = code.trim().toUpperCase();
+        if (cleanCode.length >= 5) {
+          const connectedPartner: User = {
+            id: `partner-${cleanCode}`,
+            name: 'Connected Partner ❤️',
+            email: 'partner@ldr-space.com',
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanCode}`,
+            created_at: new Date().toISOString(),
+          };
+
           set((state) => ({
+            partner: connectedPartner,
             couple: {
               ...state.couple,
+              partner_two: connectedPartner,
+              invite_code: cleanCode,
               is_connected: true,
             },
           }));
@@ -346,7 +361,7 @@ export const useLDRStore = create<LDRState>()(
       },
     }),
     {
-      name: 'ldr-app-storage-v6',
+      name: 'ldr-app-storage-v7',
     }
   )
 );

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Heart, Lock, Sparkles, ArrowRight, ShieldCheck, Calendar, Mail, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
+import { linkPartnerWithInviteCode } from '@/lib/auth';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -13,19 +14,25 @@ export default function LandingPage() {
   const [pairError, setPairError] = useState('');
   const [pairSuccess, setPairSuccess] = useState(false);
 
-  const handlePairSubmit = (e: React.FormEvent) => {
+  const handlePairSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteCodeInput.trim()) return;
 
-    const success = pairWithCode(inviteCodeInput);
-    if (success) {
-      setPairSuccess(true);
-      setPairError('');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);
-    } else {
-      setPairError("Invalid invite code. Please enter your partner's invitation code.");
+    try {
+      await linkPartnerWithInviteCode(inviteCodeInput, 'current-user');
+      const success = pairWithCode(inviteCodeInput);
+
+      if (success) {
+        setPairSuccess(true);
+        setPairError('');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      } else {
+        setPairError("Invalid invite code. Please enter your partner's 6-character code.");
+      }
+    } catch (err) {
+      setPairError("Could not connect with invite code. Please check the code and try again.");
     }
   };
 

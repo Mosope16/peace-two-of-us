@@ -194,28 +194,47 @@ export async function signInUser(email: string, pass: string) {
 
 // 3. Link Accounts with Partner Invite Code
 export async function linkPartnerWithInviteCode(inviteCode: string, currentUserId: string) {
-  if (!isSupabaseConfigured()) return true;
-
   const cleanCode = inviteCode.trim().toUpperCase();
+
+  if (!isSupabaseConfigured()) {
+    const mockPartner: User = {
+      id: `partner-${Date.now()}`,
+      name: 'Connected Partner ❤️',
+      email: 'partner@ldr-space.com',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ConnectedPartner',
+      created_at: new Date().toISOString(),
+    };
+    return { success: true, partnerUser: mockPartner };
+  }
 
   try {
     const { data: coupleRows } = await supabase
       .from('couples')
-      .select('*')
+      .select('*, partner_one_data:users!partner_one(*)')
       .eq('invite_code', cleanCode);
 
     const coupleRow = coupleRows && coupleRows[0];
-    if (!coupleRow) return true;
+    if (!coupleRow) {
+      return { success: false, partnerUser: null };
+    }
 
     await supabase
       .from('couples')
       .update({ partner_two: currentUserId })
       .eq('id', coupleRow.id);
 
-    return true;
+    const partnerUser: User = coupleRow.partner_one_data || {
+      id: coupleRow.partner_one || `partner-${Date.now()}`,
+      name: 'Connected Partner ❤️',
+      email: 'partner@ldr-space.com',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ConnectedPartner',
+      created_at: new Date().toISOString(),
+    };
+
+    return { success: true, partnerUser, coupleRow };
   } catch (err) {
     console.warn('Link partner fetch notice:', err);
-    return true;
+    return { success: true, partnerUser: null };
   }
 }
 
