@@ -68,7 +68,7 @@ const INITIAL_COUPLE: Couple = {
   id: 'couple-space-1',
   partner_one: DEFAULT_USER_1,
   partner_two: DEFAULT_USER_2,
-  relationship_start_date: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+  relationship_start_date: new Date().toISOString(),
   invite_code: generateInviteCode(),
   is_connected: true,
 };
@@ -77,29 +77,7 @@ const INITIAL_MEMORIES: Memory[] = [];
 const INITIAL_LOVE_LETTERS: LoveLetter[] = [];
 const INITIAL_MOODS: Record<string, MoodLog> = {};
 const INITIAL_BUCKET_LIST: BucketItem[] = [];
-
-const INITIAL_COUNTDOWNS: Countdown[] = [
-  {
-    id: 'cd-1',
-    couple_id: INITIAL_COUPLE.id,
-    title: 'Next Airport Visit ✈️',
-    target_date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
-    category: 'visit',
-    icon: 'Plane',
-    created_by: DEFAULT_USER_1.id,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'cd-2',
-    couple_id: INITIAL_COUPLE.id,
-    title: 'Relationship Anniversary ❤️',
-    target_date: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
-    category: 'anniversary',
-    icon: 'Heart',
-    created_by: DEFAULT_USER_2.id,
-    created_at: new Date().toISOString(),
-  },
-];
+const INITIAL_COUNTDOWNS: Countdown[] = [];
 
 export const useLDRStore = create<LDRState>()(
   persist(
@@ -368,7 +346,7 @@ export const useLDRStore = create<LDRState>()(
       },
     }),
     {
-      name: 'ldr-app-storage-v5',
+      name: 'ldr-app-storage-v6',
     }
   )
 );
