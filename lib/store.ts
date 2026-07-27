@@ -333,6 +333,7 @@ export const useLDRStore = create<LDRState>()(
         const roomCode = `ROOM-${get().couple.invite_code}`;
         const newRoom: LiveGameRoom = {
           roomCode,
+          couple_id: get().couple.id,
           gameType,
           category,
           hostUserId: get().currentUser.id,
@@ -349,6 +350,7 @@ export const useLDRStore = create<LDRState>()(
           if (!get().activeGameRoom) {
             const newRoom: LiveGameRoom = {
               roomCode,
+              couple_id: get().couple.id,
               gameType: 'know-me',
               hostUserId: get().partner.id,
               status: 'in_progress',
