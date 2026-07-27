@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, Lock, Mail, User as UserIcon, Key, ArrowRight, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Heart, Lock, Mail, User as UserIcon, Key, ArrowRight, Sparkles, CheckCircle2, ShieldCheck, AtSign } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { signUpUser, signInUser, linkPartnerWithInviteCode } from '@/lib/auth';
 
@@ -13,6 +13,7 @@ export default function LoginPage() {
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [inviteCode, setInviteCode] = useState('');
@@ -32,7 +33,7 @@ export default function LoginPage() {
         if (!name.trim()) throw new Error('Please enter your full name');
         if (!email.trim() || !password.trim()) throw new Error('Please fill in email and password');
 
-        const { user, couple } = await signUpUser(name, email, password);
+        const { user, couple } = await signUpUser(name, email, password, username);
         
         // If partner invite code was provided during signup, attempt linking
         if (inviteCode.trim()) {
@@ -110,19 +111,38 @@ export default function LoginPage() {
         {/* Form Inputs */}
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {mode === 'signup' && (
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Full Name</label>
-              <div className="relative">
-                <UserIcon className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
-                <input
-                  type="text"
-                  placeholder="e.g. Sarah Jenkins"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-rose-500 text-white text-xs focus:outline-none transition-colors"
-                />
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Full Name</label>
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    placeholder="e.g. Sarah Jenkins"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-rose-500 text-white text-xs focus:outline-none transition-colors"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1 flex items-center justify-between">
+                  <span>Username / Nickname</span>
+                  <span className="text-[10px] text-zinc-400">Optional</span>
+                </label>
+                <div className="relative">
+                  <AtSign className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    placeholder="e.g. @sweetheart or sarah_j"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-rose-500 text-white text-xs focus:outline-none transition-colors font-mono"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div>

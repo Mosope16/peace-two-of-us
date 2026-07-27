@@ -119,7 +119,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-                  {couple.partner_one.name.split(' ')[0]} &amp; {couple.partner_two?.name.split(' ')[0] || 'Partner'}
+                  {couple.partner_one.username || couple.partner_one.name.split(' ')[0]} &amp; {couple.partner_two?.username || couple.partner_two?.name.split(' ')[0] || 'Partner'}
                 </h1>
                 <button onClick={triggerLoveConfetti} title="Celebrate Love!" className="text-xl hover:scale-125 transition-transform">
                   🎉

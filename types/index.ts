@@ -11,6 +11,7 @@ export interface MoodOption {
 export interface User {
   id: string;
   name: string;
+  username?: string;
   email: string;
   avatar: string;
   created_at: string;

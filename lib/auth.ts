@@ -8,14 +8,16 @@ export function generateInviteCode(): string {
 }
 
 // 1. Sign Up User & Create Initial Couple Profile
-export async function signUpUser(name: string, email: string, pass: string) {
-  const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+export async function signUpUser(name: string, email: string, pass: string, username?: string) {
+  const cleanUsername = username?.trim() ? (username.startsWith('@') ? username.trim() : `@${username.trim()}`) : undefined;
+  const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username || name)}`;
   const userId = `user-${Date.now()}`;
   const inviteCode = generateInviteCode();
 
   const fallbackUser: User = {
     id: userId,
     name,
+    username: cleanUsername,
     email,
     avatar,
     created_at: new Date().toISOString(),
@@ -40,7 +42,7 @@ export async function signUpUser(name: string, email: string, pass: string) {
       email,
       password: pass,
       options: {
-        data: { name },
+        data: { name, username: cleanUsername },
       },
     });
 
@@ -58,6 +60,7 @@ export async function signUpUser(name: string, email: string, pass: string) {
     const realUser: User = {
       id: realUserId,
       name,
+      username: cleanUsername,
       email,
       avatar,
       created_at: new Date().toISOString(),
@@ -68,6 +71,7 @@ export async function signUpUser(name: string, email: string, pass: string) {
       await supabase.from('users').upsert({
         id: realUserId,
         name,
+        username: cleanUsername,
         email,
         avatar,
       });

@@ -116,7 +116,7 @@ export default function Navbar() {
                     alt={currentUser.name}
                     className="w-7 h-7 rounded-full object-cover ring-2 ring-rose-500/50"
                   />
-                  <span className="font-medium hidden md:inline">{currentUser.name.split(' ')[0]}</span>
+                  <span className="font-medium hidden md:inline">{currentUser.username || currentUser.name.split(' ')[0]}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 </button>
 
