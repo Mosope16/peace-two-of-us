@@ -116,7 +116,7 @@ export default function LoginPage() {
                 <UserIcon className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
                 <input
                   type="text"
-                  placeholder="e.g. Alex Rivera"
+                  placeholder="e.g. Sarah Jenkins"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-rose-500 text-white text-xs focus:outline-none transition-colors"

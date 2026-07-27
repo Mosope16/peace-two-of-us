@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Couple, Memory, LoveLetter, MoodLog, BucketItem, Countdown, MoodType, IQDuelAnswer, LiveGameRoom, QuizCategoryId } from '@/types';
+import { generateInviteCode } from './auth';
 
 interface LDRState {
   currentUser: User;
@@ -11,7 +12,7 @@ interface LDRState {
   moods: Record<string, MoodLog>; // user_id -> latest MoodLog
   bucketList: BucketItem[];
   countdowns: Countdown[];
-  activePartnerId: string; // allows toggling between viewing as Partner 1 or Partner 2
+  activePartnerId: string;
 
   // Games State
   quizAnswers: Record<string, Record<string, number>>; // questionId -> { [userId]: optionIndex }
@@ -47,40 +48,34 @@ interface LDRState {
   leaveGameRoom: () => void;
 }
 
-const ALEX: User = {
-  id: 'user-alex-101',
-  name: 'Alex Rivera',
-  email: 'alex@ldr-love.com',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-  created_at: '2025-11-20T00:00:00.000Z',
+const DEFAULT_USER_1: User = {
+  id: 'user-partner-1',
+  name: 'Partner 1',
+  email: 'partner1@ldr-space.com',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Partner1',
+  created_at: new Date().toISOString(),
 };
 
-const TAYLOR: User = {
-  id: 'user-taylor-102',
-  name: 'Taylor Vance',
-  email: 'taylor@ldr-love.com',
-  avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-  created_at: '2025-11-20T00:00:00.000Z',
+const DEFAULT_USER_2: User = {
+  id: 'user-partner-2',
+  name: 'Partner 2',
+  email: 'partner2@ldr-space.com',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Partner2',
+  created_at: new Date().toISOString(),
 };
-
-// Calculate relationship start date ~ 245 days ago
-const defaultStartDate = new Date(Date.now() - 245 * 24 * 60 * 60 * 1000).toISOString();
 
 const INITIAL_COUPLE: Couple = {
-  id: 'couple-alex-taylor-88',
-  partner_one: ALEX,
-  partner_two: TAYLOR,
-  relationship_start_date: defaultStartDate,
-  invite_code: 'LDR-892',
+  id: 'couple-space-1',
+  partner_one: DEFAULT_USER_1,
+  partner_two: DEFAULT_USER_2,
+  relationship_start_date: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+  invite_code: generateInviteCode(),
   is_connected: true,
 };
 
 const INITIAL_MEMORIES: Memory[] = [];
-
 const INITIAL_LOVE_LETTERS: LoveLetter[] = [];
-
 const INITIAL_MOODS: Record<string, MoodLog> = {};
-
 const INITIAL_BUCKET_LIST: BucketItem[] = [];
 
 const INITIAL_COUNTDOWNS: Countdown[] = [
@@ -88,11 +83,11 @@ const INITIAL_COUNTDOWNS: Countdown[] = [
     id: 'cd-1',
     couple_id: INITIAL_COUPLE.id,
     title: 'Next Airport Visit ✈️',
-    target_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    target_date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
     category: 'visit',
     icon: 'Plane',
-    created_by: ALEX.id,
-    created_at: '2026-07-01T00:00:00.000Z',
+    created_by: DEFAULT_USER_1.id,
+    created_at: new Date().toISOString(),
   },
   {
     id: 'cd-2',
@@ -101,43 +96,28 @@ const INITIAL_COUNTDOWNS: Countdown[] = [
     target_date: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
     category: 'anniversary',
     icon: 'Heart',
-    created_by: TAYLOR.id,
-    created_at: '2026-07-01T00:00:00.000Z',
-  },
-  {
-    id: 'cd-3',
-    couple_id: INITIAL_COUPLE.id,
-    title: "Taylor's Birthday 🎉",
-    target_date: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000).toISOString(),
-    category: 'birthday',
-    icon: 'Cake',
-    created_by: ALEX.id,
-    created_at: '2026-07-10T00:00:00.000Z',
+    created_by: DEFAULT_USER_2.id,
+    created_at: new Date().toISOString(),
   },
 ];
 
 export const useLDRStore = create<LDRState>()(
   persist(
     (set, get) => ({
-      currentUser: ALEX,
-      partner: TAYLOR,
+      currentUser: DEFAULT_USER_1,
+      partner: DEFAULT_USER_2,
       couple: INITIAL_COUPLE,
       memories: INITIAL_MEMORIES,
       loveLetters: INITIAL_LOVE_LETTERS,
       moods: INITIAL_MOODS,
       bucketList: INITIAL_BUCKET_LIST,
       countdowns: INITIAL_COUNTDOWNS,
-      activePartnerId: ALEX.id,
+      activePartnerId: DEFAULT_USER_1.id,
 
       // Games Initial State
-      quizAnswers: {
-        'km-ld-1': { [ALEX.id]: 0, [TAYLOR.id]: 0 },
-        'km-pc-1': { [ALEX.id]: 1 },
-      },
+      quizAnswers: {},
       iqDuelAnswers: {},
-      riddlesSolved: {
-        [`rd-1_${ALEX.id}`]: true,
-      },
+      riddlesSolved: {},
       activeGameRoom: null,
 
       setAuthenticatedUser: (user: User, partnerUser: User | null, coupleData: Couple) => {
@@ -147,7 +127,7 @@ export const useLDRStore = create<LDRState>()(
             id: 'waiting-partner',
             name: 'Waiting for Partner...',
             email: '',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=WaitingPartner',
             created_at: new Date().toISOString(),
           },
           couple: coupleData,
@@ -157,19 +137,19 @@ export const useLDRStore = create<LDRState>()(
 
       logoutUser: () => {
         set({
-          currentUser: ALEX,
-          partner: TAYLOR,
+          currentUser: DEFAULT_USER_1,
+          partner: DEFAULT_USER_2,
           couple: INITIAL_COUPLE,
-          activePartnerId: ALEX.id,
+          activePartnerId: DEFAULT_USER_1.id,
           activeGameRoom: null,
         });
       },
 
       switchActiveUser: (userId: string) => {
-        if (userId === ALEX.id) {
-          set({ currentUser: ALEX, partner: TAYLOR, activePartnerId: ALEX.id });
+        if (userId === DEFAULT_USER_1.id) {
+          set({ currentUser: DEFAULT_USER_1, partner: DEFAULT_USER_2, activePartnerId: DEFAULT_USER_1.id });
         } else {
-          set({ currentUser: TAYLOR, partner: ALEX, activePartnerId: TAYLOR.id });
+          set({ currentUser: DEFAULT_USER_2, partner: DEFAULT_USER_1, activePartnerId: DEFAULT_USER_2.id });
         }
       },
 
@@ -210,13 +190,15 @@ export const useLDRStore = create<LDRState>()(
 
       markLetterRead: (id: string) => {
         set((state) => ({
-          loveLetters: state.loveLetters.map((l) => (l.id === id ? { ...l, is_read: true } : l)),
+          loveLetters: state.loveLetters.map((l) =>
+            l.id === id ? { ...l, is_read: true } : l
+          ),
         }));
       },
 
       setMood: (mood: MoodType, note?: string) => {
         const userId = get().currentUser.id;
-        const newMoodLog: MoodLog = {
+        const newMood: MoodLog = {
           id: `mood-${Date.now()}`,
           user_id: userId,
           mood,
@@ -225,38 +207,33 @@ export const useLDRStore = create<LDRState>()(
         };
 
         set((state) => ({
-          moods: {
-            ...state.moods,
-            [userId]: newMoodLog,
-          },
+          moods: { ...state.moods, [userId]: newMood },
         }));
       },
 
       toggleBucketItem: (id: string) => {
         set((state) => ({
-          bucketList: state.bucketList.map((item) => {
-            if (item.id === id) {
-              const nextCompleted = !item.completed;
-              return {
-                ...item,
-                completed: nextCompleted,
-                completed_at: nextCompleted ? new Date().toISOString() : undefined,
-              };
-            }
-            return item;
-          }),
+          bucketList: state.bucketList.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  completed: !item.completed,
+                  completed_at: !item.completed ? new Date().toISOString() : undefined,
+                }
+              : item
+          ),
         }));
       },
 
       addBucketItem: (itemData) => {
         const newItem: BucketItem = {
           ...itemData,
-          id: `b-${Date.now()}`,
+          id: `bucket-${Date.now()}`,
           couple_id: get().couple.id,
           completed: false,
           created_at: new Date().toISOString(),
         };
-        set((state) => ({ bucketList: [...state.bucketList, newItem] }));
+        set((state) => ({ bucketList: [newItem, ...state.bucketList] }));
       },
 
       deleteBucketItem: (id: string) => {
@@ -278,105 +255,100 @@ export const useLDRStore = create<LDRState>()(
       },
 
       pairWithCode: (code: string) => {
-        if (!code || code.trim() === '') return false;
-        set((state) => ({
-          couple: {
-            ...state.couple,
-            invite_code: code.toUpperCase(),
-            is_connected: true,
-          },
-        }));
-        return true;
+        const currentCouple = get().couple;
+        if (code.trim().toUpperCase() === currentCouple.invite_code.toUpperCase() || code.length >= 6) {
+          set((state) => ({
+            couple: {
+              ...state.couple,
+              is_connected: true,
+            },
+          }));
+          return true;
+        }
+        return false;
       },
 
-      // Games Actions Implementation
+      // Games Store Logic
       answerQuizQuestion: (questionId: string, optionIndex: number) => {
-        const userId = get().currentUser.id;
-        set((state) => ({
-          quizAnswers: {
-            ...state.quizAnswers,
-            [questionId]: {
-              ...(state.quizAnswers[questionId] || {}),
-              [userId]: optionIndex,
+        const currentUserId = get().currentUser.id;
+        set((state) => {
+          const currentQuestionAnswers = state.quizAnswers[questionId] || {};
+          return {
+            quizAnswers: {
+              ...state.quizAnswers,
+              [questionId]: {
+                ...currentQuestionAnswers,
+                [currentUserId]: optionIndex,
+              },
             },
-          },
-        }));
+          };
+        });
       },
 
       saveIQDuelAnswer: (matchId: string, questionId: string, selectedIndex: number, timeTaken: number) => {
-        const userId = get().currentUser.id;
-        const key = `${userId}_${questionId}`;
-        const answerObj: IQDuelAnswer = {
-          user_id: userId,
-          question_id: questionId,
-          selected_index: selectedIndex,
-          time_taken: timeTaken,
-          is_locked: true,
+        const currentUserId = get().currentUser.id;
+        const answerKey = `${currentUserId}_${questionId}`;
+        const newAnswer: IQDuelAnswer = {
+          questionId,
+          userId: currentUserId,
+          selectedIndex,
+          timeTaken,
+          timestamp: new Date().toISOString(),
         };
 
-        set((state) => ({
-          iqDuelAnswers: {
-            ...state.iqDuelAnswers,
-            [matchId]: {
-              ...(state.iqDuelAnswers[matchId] || {}),
-              [key]: answerObj,
+        set((state) => {
+          const currentMatchAnswers = state.iqDuelAnswers[matchId] || {};
+          return {
+            iqDuelAnswers: {
+              ...state.iqDuelAnswers,
+              [matchId]: {
+                ...currentMatchAnswers,
+                [answerKey]: newAnswer,
+              },
             },
-          },
-        }));
+          };
+        });
       },
 
       solveRiddle: (riddleId: string) => {
-        const userId = get().currentUser.id;
-        const key = `${riddleId}_${userId}`;
+        const currentUserId = get().currentUser.id;
+        const solveKey = `${riddleId}_${currentUserId}`;
         set((state) => ({
           riddlesSolved: {
             ...state.riddlesSolved,
-            [key]: true,
+            [solveKey]: true,
           },
         }));
       },
 
       resetIQDuelMatch: (matchId: string) => {
-        set((state) => ({
-          iqDuelAnswers: {
-            ...state.iqDuelAnswers,
-            [matchId]: {},
-          },
-        }));
+        set((state) => {
+          const updatedMatches = { ...state.iqDuelAnswers };
+          delete updatedMatches[matchId];
+          return { iqDuelAnswers: updatedMatches };
+        });
       },
 
       createGameRoom: (gameType, category) => {
-        const userId = get().currentUser.id;
-        const coupleId = get().couple.id;
-        const inviteCode = get().couple.invite_code;
-        const roomCode = `ROOM-${inviteCode}`;
-
+        const roomCode = `ROOM-${get().couple.invite_code}`;
         const newRoom: LiveGameRoom = {
           roomCode,
-          couple_id: coupleId,
           gameType,
           category,
-          hostUserId: userId,
+          hostUserId: get().currentUser.id,
           status: 'waiting',
           created_at: new Date().toISOString(),
         };
-
         set({ activeGameRoom: newRoom });
         return newRoom;
       },
 
-      joinGameRoom: (code: string) => {
-        const coupleInvite = get().couple.invite_code;
-        const validCode = `ROOM-${coupleInvite}`;
-
-        if (code.toUpperCase().trim() === validCode || code.toUpperCase().trim() === coupleInvite) {
-          const currentRoom = get().activeGameRoom;
-          if (currentRoom) {
-            set({ activeGameRoom: { ...currentRoom, status: 'in_progress' } });
-          } else {
+      joinGameRoom: (roomCode) => {
+        const currentCode = `ROOM-${get().couple.invite_code}`;
+        if (roomCode.trim().toUpperCase() === currentCode.toUpperCase() || roomCode.toUpperCase().includes('LDR')) {
+          if (!get().activeGameRoom) {
             const newRoom: LiveGameRoom = {
-              roomCode: validCode,
-              couple_id: get().couple.id,
+              roomCode,
               gameType: 'know-me',
               hostUserId: get().partner.id,
               status: 'in_progress',
@@ -394,7 +366,7 @@ export const useLDRStore = create<LDRState>()(
       },
     }),
     {
-      name: 'ldr-app-storage-v3',
+      name: 'ldr-app-storage-v5',
     }
   )
 );

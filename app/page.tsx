@@ -25,7 +25,7 @@ export default function LandingPage() {
         router.push('/dashboard');
       }, 1000);
     } else {
-      setPairError('Invalid invite code. Try entering: LDR-892');
+      setPairError("Invalid invite code. Please enter your partner's invitation code.");
     }
   };
 

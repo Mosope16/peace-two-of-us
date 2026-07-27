@@ -23,7 +23,7 @@ import { MoodType } from '@/types';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { currentUser, partner, moods, activePartnerId, switchActiveUser, setMood } = useLDRStore();
+  const { currentUser, partner, moods, activePartnerId, switchActiveUser, logoutUser, setMood } = useLDRStore();
   const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
@@ -123,7 +123,7 @@ export default function Navbar() {
                 {isUserDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl shadow-2xl p-2 z-50 border border-rose-500/30">
                     <div className="px-3 py-2 border-b border-zinc-800 text-xs text-zinc-400">
-                      <span>Account &amp; Dual-Demo Switcher</span>
+                      <span>Account Menu</span>
                     </div>
 
                     <Link
@@ -134,37 +134,25 @@ export default function Navbar() {
                       <span>🔑 Sign In / Create Account</span>
                     </Link>
 
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-4 h-4 text-zinc-400" />
+                      <span>Couple Settings</span>
+                    </Link>
+
                     <div className="my-1 border-t border-zinc-800/80" />
 
                     <button
                       onClick={() => {
-                        switchActiveUser('user-alex-101');
+                        logoutUser();
                         setIsUserDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        activePartnerId === 'user-alex-101' ? 'bg-rose-500/20 text-rose-300' : 'text-zinc-300 hover:bg-white/5'
-                      }`}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors"
                     >
-                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" className="w-6 h-6 rounded-full object-cover" />
-                      <div className="text-left">
-                        <p className="font-semibold">Alex Rivera</p>
-                        <p className="text-[10px] text-zinc-400">Partner 1</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        switchActiveUser('user-taylor-102');
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        activePartnerId === 'user-taylor-102' ? 'bg-rose-500/20 text-rose-300' : 'text-zinc-300 hover:bg-white/5'
-                      }`}
-                    >
-                      <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80" className="w-6 h-6 rounded-full object-cover" />
-                      <div className="text-left">
-                        <p className="font-semibold">Taylor Vance</p>
-                        <p className="text-[10px] text-zinc-400">Partner 2</p>
-                      </div>
+                      <span>🚪 Reset / Sign Out</span>
                     </button>
                   </div>
                 )}
