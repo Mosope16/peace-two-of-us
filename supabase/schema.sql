@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS public.users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Ensure username column exists if table already existed previously
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+
 -- 2. COUPLES TABLE
 CREATE TABLE IF NOT EXISTS public.couples (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -59,7 +62,10 @@ CREATE TABLE IF NOT EXISTS public.bucket_list (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   couple_id UUID REFERENCES public.couples(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
+  description TEXT,
   completed BOOLEAN DEFAULT false NOT NULL,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  category TEXT DEFAULT 'travel',
   created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -70,6 +76,9 @@ CREATE TABLE IF NOT EXISTS public.countdowns (
   couple_id UUID REFERENCES public.couples(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   target_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  category TEXT DEFAULT 'visit',
+  icon TEXT DEFAULT 'Heart',
+  created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -82,7 +91,35 @@ ALTER TABLE public.moods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bucket_list ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.countdowns ENABLE ROW LEVEL SECURITY;
 
--- Sample Public RLS Policies for Development
+-- Drop Existing Policies (prevents 42710 already exists errors on re-run)
+DROP POLICY IF EXISTS "Allow public read access to users" ON public.users;
+DROP POLICY IF EXISTS "Allow public insert/update to users" ON public.users;
+
+DROP POLICY IF EXISTS "Allow public read access to couples" ON public.couples;
+DROP POLICY IF EXISTS "Allow public insert/update to couples" ON public.couples;
+
+DROP POLICY IF EXISTS "Allow public read access to memories" ON public.memories;
+DROP POLICY IF EXISTS "Allow public insert to memories" ON public.memories;
+
+DROP POLICY IF EXISTS "Allow public read access to love_letters" ON public.love_letters;
+DROP POLICY IF EXISTS "Allow public insert to love_letters" ON public.love_letters;
+
+DROP POLICY IF EXISTS "Allow public read access to moods" ON public.moods;
+DROP POLICY IF EXISTS "Allow public insert to moods" ON public.moods;
+
+DROP POLICY IF EXISTS "Allow public read access to bucket_list" ON public.bucket_list;
+DROP POLICY IF EXISTS "Allow public insert/update to bucket_list" ON public.bucket_list;
+
+DROP POLICY IF EXISTS "Allow public read access to countdowns" ON public.countdowns;
+DROP POLICY IF EXISTS "Allow public insert to countdowns" ON public.countdowns;
+
+-- Create Idempotent RLS Policies
+CREATE POLICY "Allow public read access to users" ON public.users FOR SELECT USING (true);
+CREATE POLICY "Allow public insert/update to users" ON public.users FOR ALL USING (true);
+
+CREATE POLICY "Allow public read access to couples" ON public.couples FOR SELECT USING (true);
+CREATE POLICY "Allow public insert/update to couples" ON public.couples FOR ALL USING (true);
+
 CREATE POLICY "Allow public read access to memories" ON public.memories FOR SELECT USING (true);
 CREATE POLICY "Allow public insert to memories" ON public.memories FOR INSERT WITH CHECK (true);
 
