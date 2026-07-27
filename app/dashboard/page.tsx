@@ -34,6 +34,9 @@ import {
 } from '@/lib/utils';
 import { MoodType } from '@/types';
 
+import { useEffect } from 'react';
+import { subscribeToCoupleRealtime } from '@/lib/auth';
+
 export default function DashboardPage() {
   const { 
     currentUser, 
@@ -44,10 +47,21 @@ export default function DashboardPage() {
     moods, 
     countdowns, 
     bucketList, 
-    setMood 
+    setMood,
+    updatePartnerProfile
   } = useLDRStore();
 
   const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (couple && couple.id) {
+      const unsubscribe = subscribeToCoupleRealtime(couple.id, (partnerUser) => {
+        updatePartnerProfile(partnerUser);
+        triggerLoveConfetti();
+      });
+      return () => unsubscribe();
+    }
+  }, [couple.id, updatePartnerProfile]);
 
   const daysTogether = calculateDaysTogether(couple.relationship_start_date);
   

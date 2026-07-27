@@ -23,6 +23,7 @@ interface LDRState {
 
   // Actions
   setAuthenticatedUser: (user: User, partner: User | null, couple: Couple) => void;
+  updatePartnerProfile: (partnerUser: User) => void;
   logoutUser: () => void;
   switchActiveUser: (userId: string) => void;
   updateCoupleStartDate: (date: string) => void;
@@ -114,6 +115,17 @@ export const useLDRStore = create<LDRState>()(
           couple: coupleData,
           activePartnerId: user.id,
         });
+      },
+
+      updatePartnerProfile: (partnerUser: User) => {
+        set((state) => ({
+          partner: partnerUser,
+          couple: {
+            ...state.couple,
+            partner_two: partnerUser,
+            is_connected: true,
+          },
+        }));
       },
 
       logoutUser: () => {
