@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, CheckCircle2, Heart, Clock, Play, RotateCcw, Flame, Shuffle, Trophy, ArrowRight, Loader2 } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
-import { QUIZ_CATEGORIES } from '@/lib/games-data';
-import { QuizCategoryId } from '@/types';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useActiveGameSessions, useSubmitSubjectAnswers, useSubmitGuesserAnswers, useCalculateGameScore, useGameAnswers, useSessionQuestions, useCreateGameRound, SessionQuestion } from '@/lib/queries/useGameSessions';
 
@@ -26,7 +24,6 @@ export default function KnowMeQuizPage() {
   const submitGuesserAnswers = useSubmitGuesserAnswers();
   const calculateScore = useCalculateGameScore();
 
-  const [selectedCategory, setSelectedCategory] = useState<QuizCategoryId>('long_distance');
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(60);
@@ -35,31 +32,35 @@ export default function KnowMeQuizPage() {
   // Local state for answers being collected during active play
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({});
   const [questionsList, setQuestionsList] = useState<SessionQuestion[]>([]);
+  const roundRequestKeyRef = useRef<string | null>(null);
 
   // Automatically start quiz if session is active and we are the active player
   useEffect(() => {
-    if (!session || isQuizActive || isRoundFinished) return;
+    if (!session || isQuizActive || isRoundFinished || !sessionId) return;
+
+    const roundRequestKey = `${session.id}:${session.status}`;
 
     if (session.status === 'subject_playing' && session.subject_user_id === currentUser.id) {
-      if (sessionQuestions.length === 0 && !createGameRound.isPending && !createGameRound.isSuccess) {
-        createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me' });
-      } else if (sessionQuestions.length > 0) {
+      if (sessionQuestions.length > 0) {
+        roundRequestKeyRef.current = null;
         setQuestionsList(sessionQuestions);
         setIsQuizActive(true);
         setCurrentQIndex(0);
         setTimerSeconds(60);
+      } else if (!createGameRound.isPending && roundRequestKeyRef.current !== roundRequestKey) {
+        roundRequestKeyRef.current = roundRequestKey;
+        createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me' });
       }
     } else if (session.status === 'waiting_for_guesser' && session.guesser_user_id === currentUser.id) {
       if (sessionQuestions.length > 0) {
+        roundRequestKeyRef.current = null;
         setQuestionsList(sessionQuestions);
         setIsQuizActive(true);
         setCurrentQIndex(0);
         setTimerSeconds(60);
       }
     }
-  }, [session, isQuizActive, isRoundFinished, currentUser.id, sessionQuestions, createGameRound]);
-
-  const categoryInfo = QUIZ_CATEGORIES.find((c) => c.id === selectedCategory) || QUIZ_CATEGORIES[0];
+  }, [session, isQuizActive, isRoundFinished, currentUser.id, sessionQuestions, createGameRound, sessionId]);
 
   // Per-Question 1-Minute (60 Seconds) Countdown Timer
   useEffect(() => {
@@ -311,7 +312,8 @@ export default function KnowMeQuizPage() {
                 if (currentQIndex < questionsList.length - 1) {
                   setCurrentQIndex((prev) => prev + 1);
                 } else {
-                  finishQuiz(localAnswers[currentQuestion.id] || currentQuestion.options[0]);
+                  const fallbackAnswer = currentQuestion.options?.[0] ?? 'Yes';
+                  finishQuiz(localAnswers[currentQuestion.id] || fallbackAnswer);
                 }
               }}
               className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-xs transition-all flex items-center space-x-1"

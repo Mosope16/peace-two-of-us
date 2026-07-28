@@ -41,11 +41,12 @@ export function useSendGameInvitation() {
   const coupleId = useLDRStore((state) => state.couple?.id);
   const user = useLDRStore((state) => state.currentUser);
   const partner = useLDRStore((state) => state.partner);
+  const isConnected = useLDRStore((state) => state.couple?.is_connected);
 
   return useMutation({
     mutationFn: async (gameType: string) => {
-      if (!coupleId || !user || !partner || partner.id.startsWith('waiting')) {
-        throw new Error('Cannot send invite: Partner not connected');
+      if (!coupleId || !user || !partner || !isConnected) {
+        throw new Error('Cannot send invite: Your partner has not joined this couple yet.');
       }
       
       const expiresAt = new Date();
@@ -58,12 +59,16 @@ export function useSendGameInvitation() {
           game_type: gameType,
           sender_id: user.id,
           receiver_id: partner.id,
+          status: 'pending',
           expires_at: expiresAt.toISOString(),
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error sending invite:', error);
+        throw error;
+      }
       return data as GameInvitation;
     },
     onSettled: () => {

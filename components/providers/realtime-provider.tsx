@@ -7,8 +7,8 @@ import { useLDRStore } from '@/lib/store';
 
 export default function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
-  const coupleId = useLDRStore((state) => state.coupleId);
-  const user = useLDRStore((state) => state.user);
+  const coupleId = useLDRStore((state) => state.couple?.id);
+  const user = useLDRStore((state) => state.currentUser);
 
   useEffect(() => {
     if (!coupleId || !user) return;

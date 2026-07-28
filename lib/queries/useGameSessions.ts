@@ -169,6 +169,20 @@ export type SessionQuestion = {
   categoryEmoji?: string;
 };
 
+type SessionQuestionAssignmentRow = {
+  question_id: string;
+  questions: {
+    id: string;
+    question_text: string;
+    options: string[] | null;
+    answer_type: string;
+    game_categories: {
+      name: string | null;
+      emoji: string | null;
+    } | null;
+  } | null;
+};
+
 export function useGameCategories(gameSlug: string) {
   return useQuery({
     queryKey: ['game_categories', gameSlug],
@@ -212,16 +226,21 @@ export function useSessionQuestions(sessionId: string | null) {
         .order('assigned_at', { ascending: true });
 
       if (error) throw error;
-      
-      // Transform nested response
-      return (data as any[]).map(a => ({
-        id: (a.questions as any).id,
-        text: (a.questions as any).question_text,
-        options: (a.questions as any).options,
-        answerType: (a.questions as any).answer_type,
-        categoryName: (a.questions as any).game_categories?.name,
-        categoryEmoji: (a.questions as any).game_categories?.emoji,
-      })) as SessionQuestion[];
+
+      return (data as unknown as SessionQuestionAssignmentRow[]).flatMap((assignment) => {
+        const question = assignment.questions;
+
+        if (!question) return [];
+
+        return [{
+          id: question.id,
+          text: question.question_text,
+          options: question.options,
+          answerType: question.answer_type,
+          categoryName: question.game_categories?.name ?? undefined,
+          categoryEmoji: question.game_categories?.emoji ?? undefined,
+        }];
+      }) as SessionQuestion[];
     },
     enabled: !!sessionId,
   });
@@ -239,7 +258,15 @@ export function useCreateGameRound() {
       });
 
       if (error) throw error;
-      return data as SessionQuestion[];
+
+      return (data as unknown as Array<{
+        id: string;
+        text: string;
+        options: string[] | null;
+        answerType: string;
+        categoryName?: string | null;
+        categoryEmoji?: string | null;
+      }>) as SessionQuestion[];
     },
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['session_questions', variables.sessionId] });

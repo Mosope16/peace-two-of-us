@@ -38,24 +38,24 @@ export default function GamesHubPage() {
 
   const getGameLabel = (type: string) => {
     switch (type) {
-      case 'know_me': return 'Know Me';
-      case 'this_or_that': return 'This or That';
-      case 'would_you_rather': return 'Would You Rather';
+      case 'know-me': return 'Know Me';
+      case 'this-or-that': return 'This or That';
+      case 'would-you-rather': return 'Would You Rather';
       case 'compatibility': return 'Compatibility Quiz';
-      case 'iq_duel': return 'IQ Duel';
-      case 'riddle_night': return 'Riddle Night';
+      case 'iq-duel': return 'IQ Duel';
+      case 'riddles': return 'Riddle Night';
       default: return 'Game';
     }
   };
 
   const getGameLink = (type: string) => {
     switch (type) {
-      case 'know_me': return '/games/know-me';
-      case 'this_or_that': return '/games/this-or-that';
-      case 'would_you_rather': return '/games/would-you-rather';
+      case 'know-me': return '/games/know-me';
+      case 'this-or-that': return '/games/this-or-that';
+      case 'would-you-rather': return '/games/would-you-rather';
       case 'compatibility': return '/games/compatibility';
-      case 'iq_duel': return '/games/iq-duel';
-      case 'riddle_night': return '/games/riddle-night';
+      case 'iq-duel': return '/games/iq-duel';
+      case 'riddles': return '/games/riddle-night';
       default: return '/games';
     }
   };
@@ -204,11 +204,16 @@ export default function GamesHubPage() {
 
           <div className="flex gap-2 w-full">
             <button
-              onClick={() => sendInvite.mutate('know_me')}
+              onClick={() => {
+                sendInvite.mutate('know-me', {
+                  onSuccess: () => alert('Invitation sent!'),
+                  onError: (err: any) => alert(`Error: ${err.message || 'Failed to send invite'}`)
+                });
+              }}
               disabled={sendInvite.isPending}
               className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
             >
-              <span>Invite</span>
+              {sendInvite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Invite</span>}
             </button>
             <Link
               href="/games/know-me"
@@ -244,11 +249,16 @@ export default function GamesHubPage() {
 
           <div className="flex gap-2 w-full">
             <button
-              onClick={() => sendInvite.mutate('this_or_that')}
+              onClick={() => {
+                sendInvite.mutate('this-or-that', {
+                  onSuccess: () => alert('Invitation sent!'),
+                  onError: (err: any) => alert(`Error: ${err.message || 'Failed to send invite'}`)
+                });
+              }}
               disabled={sendInvite.isPending}
               className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
             >
-              <span>Invite</span>
+              {sendInvite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Invite</span>}
             </button>
             <Link
               href="/games/this-or-that"
@@ -284,11 +294,16 @@ export default function GamesHubPage() {
 
           <div className="flex gap-2 w-full">
             <button
-              onClick={() => sendInvite.mutate('would_you_rather')}
+              onClick={() => {
+                sendInvite.mutate('would-you-rather', {
+                  onSuccess: () => alert('Invitation sent!'),
+                  onError: (err: any) => alert(`Error: ${err.message || 'Failed to send invite'}`)
+                });
+              }}
               disabled={sendInvite.isPending}
               className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
             >
-              <span>Invite</span>
+              {sendInvite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Invite</span>}
             </button>
             <Link
               href="/games/would-you-rather"
@@ -321,17 +336,31 @@ export default function GamesHubPage() {
             </div>
           </div>
 
-          <Link
-            href="/games/compatibility"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
-          >
-            <span>Take Compatibility Quiz</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => {
+                sendInvite.mutate('compatibility', {
+                  onSuccess: () => alert('Invitation sent!'),
+                  onError: (err: any) => alert(`Error: ${err.message || 'Failed to send invite'}`)
+                });
+              }}
+              disabled={sendInvite.isPending}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
+            >
+              {sendInvite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Invite</span>}
+            </button>
+            <Link
+              href="/games/compatibility"
+              className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            >
+              <span>Play Quiz</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* 5. IQ Duel */}
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-indigo-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-indigo-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group bg-gradient-to-b from-indigo-950/20 to-zinc-900">
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white font-bold">
               <Brain className="w-6 h-6" />
@@ -347,17 +376,31 @@ export default function GamesHubPage() {
             </div>
           </div>
 
-          <Link
-            href="/games/iq-duel"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
-          >
-            <span>Play IQ Duel</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => {
+                sendInvite.mutate('iq-duel', {
+                  onSuccess: () => alert('Invitation sent!'),
+                  onError: (err: any) => alert(`Error: ${err.message || 'Failed to send invite'}`)
+                });
+              }}
+              disabled={sendInvite.isPending}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
+            >
+              {sendInvite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Invite</span>}
+            </button>
+            <Link
+              href="/games/iq-duel"
+              className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            >
+              <span>Play IQ Duel</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* 6. Riddle Night */}
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-emerald-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-emerald-500/30 flex flex-col justify-between space-y-6 relative overflow-hidden group bg-gradient-to-b from-emerald-950/20 to-zinc-900">
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white font-bold">
               <HelpCircle className="w-6 h-6" />
@@ -373,13 +416,27 @@ export default function GamesHubPage() {
             </div>
           </div>
 
-          <Link
-            href="/games/riddle-night"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
-          >
-            <span>Play Riddle Night</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => {
+                sendInvite.mutate('riddles', {
+                  onSuccess: () => alert('Invitation sent!'),
+                  onError: (err: any) => alert(`Error: ${err.message || 'Failed to send invite'}`)
+                });
+              }}
+              disabled={sendInvite.isPending}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
+            >
+              {sendInvite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Invite</span>}
+            </button>
+            <Link
+              href="/games/riddle-night"
+              className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            >
+              <span>Play Riddle Night</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
       </div>

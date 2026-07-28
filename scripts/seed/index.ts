@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { games } from './games';
@@ -33,6 +34,12 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+function createStableQuestionId(gameId: string | undefined, categoryId: string | undefined, questionText: string) {
+  const seed = [gameId ?? '', categoryId ?? '', questionText].join('::');
+  const hash = createHash('sha1').update(seed).digest('hex');
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
 
 async function seed() {
   console.log('🚀 Starting seed process...');
@@ -83,34 +90,48 @@ async function seed() {
   console.log('Seeding questions...');
 
   const allQuestions = [
-    ...knowMeQuestions.map(q => ({ ...q, game_id: gameMap.get('know-me') })),
+    ...knowMeQuestions.map(q => ({
+      id: createStableQuestionId(gameMap.get('know-me'), q.category_id, q.question_text),
+      ...q,
+      game_id: gameMap.get('know-me')
+    })),
     ...iqDuelQuestions.map(q => {
       const { game_slug, ...qData } = q;
-      return { ...qData, game_id: gameMap.get(game_slug) };
+      return {
+        id: createStableQuestionId(gameMap.get(game_slug), undefined, qData.question_text),
+        ...qData,
+        game_id: gameMap.get(game_slug)
+      };
     }),
     ...riddleQuestions.map(q => {
       const { game_slug, ...qData } = q;
-      return { ...qData, game_id: gameMap.get(game_slug) };
+      return {
+        id: createStableQuestionId(gameMap.get(game_slug), undefined, qData.question_text),
+        ...qData,
+        game_id: gameMap.get(game_slug)
+      };
     }),
     ...thisOrThatQuestions.map(q => {
       const { game_slug, ...qData } = q;
-      return { ...qData, game_id: gameMap.get(game_slug) };
+      return {
+        id: createStableQuestionId(gameMap.get(game_slug), undefined, qData.question_text),
+        ...qData,
+        game_id: gameMap.get(game_slug)
+      };
     }),
     ...wouldYouRatherQuestions.map(q => {
       const { game_slug, ...qData } = q;
-      return { ...qData, game_id: gameMap.get(game_slug) };
+      return {
+        id: createStableQuestionId(gameMap.get(game_slug), undefined, qData.question_text),
+        ...qData,
+        game_id: gameMap.get(game_slug)
+      };
     }),
   ];
 
-  // To avoid duplicates on re-run without stable question IDs,
-  // we might want to clear existing questions or just accept duplicates if they don't have stable IDs.
-  // Better yet, we can use question_text + game_id as a unique identifier for upsert if we had such constraint.
-  // Since we don't, I'll just insert them.
-  // WARNING: Running this multiple times will duplicate questions unless we add stable IDs.
-
   const { error: questionsError } = await supabase
     .from('questions')
-    .insert(allQuestions);
+    .upsert(allQuestions, { onConflict: 'id' });
 
   if (questionsError) {
     console.error('❌ Error seeding questions:', questionsError);
