@@ -20,15 +20,19 @@ import {
 import { useLDRStore } from '@/lib/store';
 import { getMoodDetails, MOOD_OPTIONS } from '@/lib/utils';
 import { MoodType } from '@/types';
+import { useMoods, useSetMood } from '@/lib/queries/useMoods';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { currentUser, partner, couple, moods, logoutUser, setMood } = useLDRStore();
+  const { currentUser, partner, couple, logoutUser } = useLDRStore();
   const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
-  const activeMoodLog = moods[currentUser.id];
-  const partnerMoodLog = partner && couple.is_connected ? moods[partner.id] : null;
+  const { data: moodLogs = [] } = useMoods();
+  const setMoodMutation = useSetMood();
+
+  const activeMoodLog = moodLogs.find(m => m.user_id === currentUser.id);
+  const partnerMoodLog = partner && couple.is_connected ? moodLogs.find(m => m.user_id === partner.id) : null;
   const partnerMoodDetails = partnerMoodLog ? getMoodDetails(partnerMoodLog.mood) : null;
 
   const navLinks = [
@@ -197,7 +201,7 @@ export default function Navbar() {
                 <button
                   key={option.id}
                   onClick={() => {
-                    setMood(option.id as MoodType);
+                    setMoodMutation.mutate({ mood: option.id });
                     setIsMoodModalOpen(false);
                   }}
                   className={`flex flex-col items-center p-3 rounded-xl border transition-all hover:scale-105 ${

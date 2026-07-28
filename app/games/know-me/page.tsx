@@ -2,33 +2,64 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, CheckCircle2, Heart, Clock, Play, RotateCcw, Flame, Shuffle, Trophy, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Sparkles, CheckCircle2, Heart, Clock, Play, RotateCcw, Flame, Shuffle, Trophy, ArrowRight, Loader2 } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
-import { QUIZ_CATEGORIES, KNOW_ME_QUESTIONS, shuffleArray } from '@/lib/games-data';
-import { QuizCategoryId, KnowMeQuestion } from '@/types';
+import { QUIZ_CATEGORIES } from '@/lib/games-data';
+import { QuizCategoryId } from '@/types';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useActiveGameSessions, useSubmitSubjectAnswers, useSubmitGuesserAnswers, useCalculateGameScore, useGameAnswers, useSessionQuestions, useCreateGameRound, SessionQuestion } from '@/lib/queries/useGameSessions';
 
 export default function KnowMeQuizPage() {
-  const { currentUser, partner, quizAnswers, answerQuizQuestion } = useLDRStore();
+  const { currentUser, partner } = useLDRStore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const sessionId = searchParams.get('session');
+
+  const { data: sessions = [], isLoading: sessionsLoading } = useActiveGameSessions();
+  const session = sessions.find((s) => s.id === sessionId);
+
+  const { data: dbAnswers = [], isLoading: answersLoading } = useGameAnswers(sessionId);
+  const { data: sessionQuestions = [], isLoading: questionsLoading } = useSessionQuestions(sessionId);
+  const createGameRound = useCreateGameRound();
+  
+  const submitSubjectAnswers = useSubmitSubjectAnswers();
+  const submitGuesserAnswers = useSubmitGuesserAnswers();
+  const calculateScore = useCalculateGameScore();
+
   const [selectedCategory, setSelectedCategory] = useState<QuizCategoryId>('long_distance');
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(60);
   const [isRoundFinished, setIsRoundFinished] = useState(false);
-  const [questionsList, setQuestionsList] = useState<KnowMeQuestion[]>([]);
+  
+  // Local state for answers being collected during active play
+  const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({});
+  const [questionsList, setQuestionsList] = useState<SessionQuestion[]>([]);
+
+  // Automatically start quiz if session is active and we are the active player
+  useEffect(() => {
+    if (!session || isQuizActive || isRoundFinished) return;
+
+    if (session.status === 'subject_playing' && session.subject_user_id === currentUser.id) {
+      if (sessionQuestions.length === 0 && !createGameRound.isPending && !createGameRound.isSuccess) {
+        createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me' });
+      } else if (sessionQuestions.length > 0) {
+        setQuestionsList(sessionQuestions);
+        setIsQuizActive(true);
+        setCurrentQIndex(0);
+        setTimerSeconds(60);
+      }
+    } else if (session.status === 'waiting_for_guesser' && session.guesser_user_id === currentUser.id) {
+      if (sessionQuestions.length > 0) {
+        setQuestionsList(sessionQuestions);
+        setIsQuizActive(true);
+        setCurrentQIndex(0);
+        setTimerSeconds(60);
+      }
+    }
+  }, [session, isQuizActive, isRoundFinished, currentUser.id, sessionQuestions, createGameRound]);
 
   const categoryInfo = QUIZ_CATEGORIES.find((c) => c.id === selectedCategory) || QUIZ_CATEGORIES[0];
-
-  // Start/restart quiz round with shuffled questions
-  const startQuizRound = (category: QuizCategoryId = selectedCategory) => {
-    const rawCategoryQuestions = KNOW_ME_QUESTIONS.filter((q) => q.category === category);
-    const shuffled = shuffleArray(rawCategoryQuestions);
-    setQuestionsList(shuffled);
-    setSelectedCategory(category);
-    setCurrentQIndex(0);
-    setTimerSeconds(60);
-    setIsQuizActive(true);
-    setIsRoundFinished(false);
-  };
 
   // Per-Question 1-Minute (60 Seconds) Countdown Timer
   useEffect(() => {
@@ -58,38 +89,51 @@ export default function KnowMeQuizPage() {
 
   // Handle Option Selection -> Lock in & Auto-Advance to Next Question
   const handleSelectOption = (questionId: string, optionIndex: number) => {
-    answerQuizQuestion(questionId, optionIndex);
+    const question = questionsList.find(q => q.id === questionId);
+    if (!question) return;
+
+    const answerText = question.options ? question.options[optionIndex] : 'Yes';
+    setLocalAnswers(prev => ({ ...prev, [questionId]: answerText }));
 
     // Auto-advance to next question with fresh timer
     setTimeout(() => {
       if (currentQIndex < questionsList.length - 1) {
         setCurrentQIndex((prev) => prev + 1);
       } else {
-        // Finished all questions in category!
-        setIsRoundFinished(true);
-        setIsQuizActive(false);
+        // Finished all questions! Submit them.
+        finishQuiz(answerText);
       }
     }, 250);
   };
 
-  const currentQuestion = questionsList[currentQIndex];
+  const finishQuiz = async (lastAnswer: string) => {
+    setIsQuizActive(false);
+    setIsRoundFinished(true);
 
-  // Calculate Match Score for Summary Screen
-  let totalAnsweredBoth = 0;
-  let totalMatchedCount = 0;
+    if (!session || !sessionId) return;
 
-  questionsList.forEach((q) => {
-    const answersObj = quizAnswers[q.id] || {};
-    const myAns = answersObj[currentUser.id];
-    const partnerAns = answersObj[partner?.id || ''];
-
-    if (myAns !== undefined && partnerAns !== undefined) {
-      totalAnsweredBoth += 1;
-      if (myAns === partnerAns) totalMatchedCount += 1;
+    try {
+      if (session.subject_user_id === currentUser.id) {
+        const payload = questionsList.map(q => ({
+          question_id: q.id,
+          question_text: q.text,
+          subject_answer: q.id === currentQuestion.id ? lastAnswer : (localAnswers[q.id] || (q.options ? q.options[0] : 'Yes'))
+        }));
+        await submitSubjectAnswers.mutateAsync({ sessionId, answers: payload });
+      } else if (session.guesser_user_id === currentUser.id) {
+        const payload = questionsList.map(q => ({
+          question_id: q.id,
+          guess_answer: q.id === currentQuestion.id ? lastAnswer : (localAnswers[q.id] || (q.options ? q.options[0] : 'Yes'))
+        }));
+        await submitGuesserAnswers.mutateAsync({ sessionId, answers: payload });
+        await calculateScore.mutateAsync(sessionId);
+      }
+    } catch (e) {
+      console.error(e);
     }
-  });
+  };
 
-  const matchPercentage = totalAnsweredBoth > 0 ? Math.round((totalMatchedCount / totalAnsweredBoth) * 100) : 0;
+  const currentQuestion = questionsList[currentQIndex];
 
   return (
     <div className="space-y-8 pb-12">
@@ -120,57 +164,71 @@ export default function KnowMeQuizPage() {
         </p>
       </div>
 
-      {/* 17 Category Selector Grid (Shown when not mid-quiz) */}
+      {/* Session Selection / Waiting State */}
       {!isQuizActive && !isRoundFinished && (
         <div className="space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pick Category &amp; Start Quiz</h2>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
-            {QUIZ_CATEGORIES.map((cat) => {
-              const isSelected = cat.id === selectedCategory;
-              const count = KNOW_ME_QUESTIONS.filter((q) => q.category === cat.id).length;
-
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex flex-col items-center p-3 rounded-2xl border text-center transition-all ${
-                    isSelected
-                      ? `${cat.badgeBg} ring-2 ring-rose-500 shadow-lg scale-105`
-                      : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
-                  }`}
-                >
-                  <span className="text-2xl mb-1">{cat.emoji}</span>
-                  <div className="flex items-center space-x-1">
-                    <span className={`text-xs font-bold ${isSelected ? 'text-white' : cat.color}`}>
-                      {cat.title}
-                    </span>
-                    {cat.is18Plus && <span className="text-[9px] px-1 bg-red-600 text-white font-extrabold rounded">18+</span>}
-                  </div>
-                  <span className="text-[10px] text-zinc-400 mt-1">{count} Questions</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Start Quiz Card */}
-          <div className="glass-card rounded-2xl p-6 border border-rose-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-rose-950/40 via-zinc-900 to-pink-950/40">
-            <div className="flex items-center space-x-3">
-              <span className="text-4xl">{categoryInfo.emoji}</span>
-              <div>
-                <h3 className="text-lg font-bold text-white">{categoryInfo.title} Quiz</h3>
-                <p className="text-xs text-zinc-400">⏱️ 1 Minute per question • Auto-advances when answered</p>
-              </div>
+          {!sessionId ? (
+            <div className="glass-card rounded-2xl p-8 border border-zinc-800 text-center space-y-4">
+              <h2 className="text-xl font-bold text-white">No Active Session Selected</h2>
+              <p className="text-sm text-zinc-400">Please go back to the Games Hub to invite your partner or join an active game.</p>
+              <Link href="/games" className="inline-block px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md transition-all">
+                Return to Games Hub
+              </Link>
             </div>
-
-            <button
-              onClick={() => startQuizRound(selectedCategory)}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              <span>Start Quiz</span>
-            </button>
-          </div>
+          ) : sessionsLoading || answersLoading ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+            </div>
+          ) : session ? (
+            <div className="glass-card rounded-2xl p-8 border border-rose-500/30 text-center space-y-4">
+              <h2 className="text-xl font-bold text-white">
+                {session.status === 'completed' ? 'Game Completed!' : 'Waiting for Partner'}
+              </h2>
+              <p className="text-sm text-zinc-400">
+                {session.status === 'subject_playing' && session.guesser_user_id === currentUser.id && `${partner?.name.split(' ')[0]} is currently answering questions...`}
+                {session.status === 'waiting_for_guesser' && session.subject_user_id === currentUser.id && `${partner?.name.split(' ')[0]} is currently guessing your answers...`}
+                {session.status === 'guessing' && `Calculating score...`}
+                {session.status === 'completed' && `You scored ${session.score}% match!`}
+              </p>
+              
+              {session.status === 'completed' && (
+                <div className="mt-6 text-left max-w-2xl mx-auto border-t border-zinc-800 pt-6">
+                  <h3 className="text-sm font-bold text-white mb-4">Answers Breakdown</h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {dbAnswers.map((a, idx) => {
+                      const isMatch = a.subject_answer === a.guess_answer;
+                      return (
+                        <div key={a.id} className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-rose-300">Q{idx + 1}: {a.question_text}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                              isMatch ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                            }`}>
+                              {isMatch ? 'Match!' : 'Different'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] border-t border-zinc-900">
+                            <div>
+                              <span className="text-zinc-400 block">{session.subject_user_id === currentUser.id ? 'Your Answer' : `${partner?.name.split(' ')[0]}'s Answer`}:</span>
+                              <strong className="text-white">{a.subject_answer}</strong>
+                            </div>
+                            <div>
+                              <span className="text-zinc-400 block">{session.guesser_user_id === currentUser.id ? 'Your Guess' : `${partner?.name.split(' ')[0]}'s Guess`}:</span>
+                              <strong className="text-pink-300">{a.guess_answer}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="glass-card rounded-2xl p-8 border border-zinc-800 text-center">
+              <h2 className="text-xl font-bold text-white">Session not found</h2>
+            </div>
+          )}
         </div>
       )}
 
@@ -181,12 +239,12 @@ export default function KnowMeQuizPage() {
           {/* Top Progress Bar & Per-Question 1-Minute Live Clock */}
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">{categoryInfo.emoji}</span>
+              <span className="text-2xl">{currentQuestion.categoryEmoji || '❓'}</span>
               <div>
                 <span className="text-xs font-bold text-rose-400 tracking-widest uppercase">
                   Question {currentQIndex + 1} of {questionsList.length}
                 </span>
-                <h3 className="text-xs text-zinc-400 font-medium">{categoryInfo.title}</h3>
+                <h3 className="text-xs text-zinc-400 font-medium">{currentQuestion.categoryName || 'General'}</h3>
               </div>
             </div>
 
@@ -210,15 +268,14 @@ export default function KnowMeQuizPage() {
           {/* Current Question Text */}
           <div className="py-2">
             <h2 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              {currentQuestion.question}
+              {currentQuestion.text}
             </h2>
           </div>
 
           {/* Options Grid — Clicking One Locks Choice & Auto Advances */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {currentQuestion.options.map((option, idx) => {
-              const answersObj = quizAnswers[currentQuestion.id] || {};
-              const isMySelection = answersObj[currentUser.id] === idx;
+            {currentQuestion.options && currentQuestion.options.map((option, idx) => {
+              const isMySelection = localAnswers[currentQuestion.id] === option;
 
               return (
                 <button
@@ -254,13 +311,12 @@ export default function KnowMeQuizPage() {
                 if (currentQIndex < questionsList.length - 1) {
                   setCurrentQIndex((prev) => prev + 1);
                 } else {
-                  setIsRoundFinished(true);
-                  setIsQuizActive(false);
+                  finishQuiz(localAnswers[currentQuestion.id] || currentQuestion.options[0]);
                 }
               }}
               className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-xs transition-all flex items-center space-x-1"
             >
-              <span>Next Question</span>
+              <span>{currentQIndex < questionsList.length - 1 ? 'Next Question' : 'Finish Quiz'}</span>
               <ArrowRight className="w-4 h-4 text-zinc-400" />
             </button>
           </div>
@@ -272,78 +328,27 @@ export default function KnowMeQuizPage() {
         <div className="glass-card rounded-2xl p-8 border border-rose-500/40 text-center space-y-8 bg-gradient-to-b from-rose-950/30 via-zinc-900 to-zinc-950 shadow-2xl animate-in fade-in duration-300">
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold">
             <Trophy className="w-4 h-4 text-rose-400" />
-            <span>Quiz Category Completed!</span>
+            <span>Turn Completed!</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-black text-white">
-            {totalAnsweredBoth > 0 ? `${matchPercentage}% Match with ${partner?.name.split(' ')[0]} ❤️` : 'Answers Locked In!'}
+            Answers Submitted
           </h2>
 
           <p className="text-xs text-zinc-400 max-w-md mx-auto">
-            You finished the <span className="text-rose-300 font-bold">{categoryInfo.title}</span> quiz category. Switch to {partner?.name.split(' ')[0]}'s profile in the top menu to complete their answers and calculate your final match score!
+            Your answers have been recorded. Waiting for the final calculation...
           </p>
 
-          {/* Detailed Question Answers Comparison */}
-          <div className="space-y-4 text-left max-w-2xl mx-auto pt-4 border-t border-zinc-800">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider text-center">Question Answers Breakdown</h3>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-              {questionsList.map((q, idx) => {
-                const answersObj = quizAnswers[q.id] || {};
-                const myAns = answersObj[currentUser.id];
-                const partnerAns = answersObj[partner?.id || ''];
-                const isMatch = myAns !== undefined && partnerAns !== undefined && myAns === partnerAns;
-
-                return (
-                  <div key={q.id} className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-rose-300">Q{idx + 1}: {q.question}</span>
-                      {myAns !== undefined && partnerAns !== undefined && (
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                          isMatch ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                        }`}>
-                          {isMatch ? 'Match!' : 'Different'}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] border-t border-zinc-900">
-                      <div>
-                        <span className="text-zinc-400 block">Your Answer:</span>
-                        <strong className="text-white">
-                          {myAns !== undefined ? q.options[myAns] : 'Not answered'}
-                        </strong>
-                      </div>
-                      <div>
-                        <span className="text-zinc-400 block">{partner?.name.split(' ')[0]}'s Answer:</span>
-                        <strong className="text-pink-300">
-                          {partnerAns !== undefined ? q.options[partnerAns] : 'Waiting for partner...'}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <button
-              onClick={() => startQuizRound(selectedCategory)}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg inline-flex items-center justify-center space-x-2 transition-all"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Replay Category</span>
-            </button>
-
             <button
               onClick={() => {
                 setIsRoundFinished(false);
                 setIsQuizActive(false);
+                router.push('/games');
               }}
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold text-xs border border-zinc-700 inline-flex items-center justify-center space-x-2 transition-all"
             >
-              <span>Try Another Category</span>
+              <span>Return to Games Hub</span>
             </button>
           </div>
         </div>

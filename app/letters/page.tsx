@@ -1,13 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Plus, Lock, Unlock, Calendar, User, Trash2, Clock, Sparkles, X, Heart } from 'lucide-react';
+import { Mail, Plus, Lock, Unlock, Calendar, User, Trash2, Clock, Sparkles, X, Heart, Loader2 } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { formatDate, calculateCountdownDays, isLetterLocked, triggerLoveConfetti } from '@/lib/utils';
 import { LoveLetter } from '@/types';
+import { useLoveLetters, useAddLoveLetter, useDeleteLoveLetter, useMarkLetterRead } from '@/lib/queries/useLoveLetters';
 
 export default function LoveLettersPage() {
-  const { loveLetters, currentUser, partner, addLoveLetter, deleteLoveLetter, markLetterRead } = useLDRStore();
+  const { currentUser, partner } = useLDRStore();
+  const { data: loveLetters = [], isLoading } = useLoveLetters();
+  const addLoveLetter = useAddLoveLetter();
+  const deleteLoveLetter = useDeleteLoveLetter();
+  const markLetterRead = useMarkLetterRead();
+
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState<LoveLetter | null>(null);
 
@@ -20,11 +26,10 @@ export default function LoveLettersPage() {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
 
-    addLoveLetter({
+    addLoveLetter.mutate({
       title,
       content,
       unlock_date: unlockDate ? new Date(unlockDate).toISOString() : undefined,
-      created_by: currentUser.id,
     });
 
     triggerLoveConfetti();
@@ -52,7 +57,8 @@ export default function LoveLettersPage() {
 
         <button
           onClick={() => setIsWriteModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 flex items-center space-x-2 transition-transform hover:scale-105"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 flex items-center space-x-2 transition-transform hover:scale-105 disabled:opacity-50"
+          disabled={addLoveLetter.isPending}
         >
           <Plus className="w-4 h-4" />
           <span>Write Love Letter</span>
@@ -60,7 +66,11 @@ export default function LoveLettersPage() {
       </div>
 
       {/* Letters Grid */}
-      {loveLetters.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 text-pink-500 animate-spin" />
+        </div>
+      ) : loveLetters.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center space-y-3">
           <Mail className="w-12 h-12 text-zinc-600 mx-auto" />
           <h3 className="text-base font-bold text-white">Your Mailbox is Empty</h3>
@@ -73,13 +83,16 @@ export default function LoveLettersPage() {
             const countdown = letter.unlock_date ? calculateCountdownDays(letter.unlock_date) : null;
             const isAuthor = letter.created_by === currentUser.id;
             const authorName = isAuthor ? currentUser.name.split(' ')[0] : partner?.name.split(' ')[0] || 'Partner';
+            const isOptimistic = letter.id.startsWith('temp-');
 
             return (
               <div
                 key={letter.id}
                 onClick={() => {
-                  if (!locked || isAuthor) {
-                    markLetterRead(letter.id);
+                  if ((!locked || isAuthor) && !isOptimistic) {
+                    if (!letter.is_read && !isAuthor) {
+                      markLetterRead.mutate(letter.id);
+                    }
                     setSelectedLetter(letter);
                   }
                 }}
@@ -87,7 +100,7 @@ export default function LoveLettersPage() {
                   locked
                     ? 'border-amber-500/30 hover:border-amber-500/50'
                     : 'border-pink-500/30 hover:border-pink-500/60 hover:shadow-xl hover:shadow-pink-500/10'
-                }`}
+                } ${isOptimistic ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -138,9 +151,10 @@ export default function LoveLettersPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteLoveLetter(letter.id);
+                        deleteLoveLetter.mutate(letter.id);
                       }}
-                      className="p-1 text-zinc-500 hover:text-rose-400"
+                      disabled={deleteLoveLetter.isPending || isOptimistic}
+                      className="p-1 text-zinc-500 hover:text-rose-400 disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -213,9 +227,10 @@ export default function LoveLettersPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold shadow-md"
+                  disabled={addLoveLetter.isPending}
+                  className="px-6 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold shadow-md disabled:opacity-50"
                 >
-                  Seal &amp; Send Letter
+                  {addLoveLetter.isPending ? 'Sealing...' : 'Seal & Send Letter'}
                 </button>
               </div>
             </form>

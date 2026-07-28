@@ -2,33 +2,61 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Gamepad2, Brain, HelpCircle, Sparkles, ArrowRight, ShieldAlert, Award, Lock, Zap, Users, ShieldCheck, CheckCircle2, Copy, Radio } from 'lucide-react';
+import { Gamepad2, Brain, HelpCircle, Sparkles, ArrowRight, ShieldAlert, Award, Lock, Zap, Users, ShieldCheck, CheckCircle2, Copy, Radio, Inbox, Loader2, Play } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
+import { 
+  useGameInvitations, 
+  useAcceptGameInvitation, 
+  useDeclineGameInvitation, 
+  useSendGameInvitation 
+} from '@/lib/queries/useGameInvitations';
+import { useActiveGameSessions } from '@/lib/queries/useGameSessions';
+import { formatDate } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 export default function GamesHubPage() {
-  const { currentUser, partner, couple, activeGameRoom, createGameRoom, joinGameRoom, leaveGameRoom } = useLDRStore();
-  const [roomInput, setRoomInput] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [joinMsg, setJoinMsg] = useState('');
+  const { currentUser, partner, couple } = useLDRStore();
+  const router = useRouter();
 
-  const defaultRoomCode = `ROOM-${couple.invite_code}`;
+  const { data: invitations = [], isLoading: invitesLoading } = useGameInvitations();
+  const { data: sessions = [], isLoading: sessionsLoading } = useActiveGameSessions();
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(defaultRoomCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const sendInvite = useSendGameInvitation();
+  const acceptInvite = useAcceptGameInvitation();
+  const declineInvite = useDeclineGameInvitation();
+
+  const handleAccept = async (inviteId: string, gameType: string) => {
+    try {
+      const sessionId = await acceptInvite.mutateAsync(inviteId);
+      if (sessionId) {
+        router.push(`${getGameLink(gameType)}?session=${sessionId}`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleJoinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomInput.trim()) return;
+  const getGameLabel = (type: string) => {
+    switch (type) {
+      case 'know_me': return 'Know Me';
+      case 'this_or_that': return 'This or That';
+      case 'would_you_rather': return 'Would You Rather';
+      case 'compatibility': return 'Compatibility Quiz';
+      case 'iq_duel': return 'IQ Duel';
+      case 'riddle_night': return 'Riddle Night';
+      default: return 'Game';
+    }
+  };
 
-    const success = joinGameRoom(roomInput);
-    if (success) {
-      setJoinMsg('✅ Connected to live couple room successfully!');
-      setRoomInput('');
-    } else {
-      setJoinMsg('❌ Invalid room code. Enter your couple code: ' + couple.invite_code);
+  const getGameLink = (type: string) => {
+    switch (type) {
+      case 'know_me': return '/games/know-me';
+      case 'this_or_that': return '/games/this-or-that';
+      case 'would_you_rather': return '/games/would-you-rather';
+      case 'compatibility': return '/games/compatibility';
+      case 'iq_duel': return '/games/iq-duel';
+      case 'riddle_night': return '/games/riddle-night';
+      default: return '/games';
     }
   };
 
@@ -56,98 +84,98 @@ export default function GamesHubPage() {
         </div>
       </div>
 
-      {/* LIVE COUPLE MULTIPLAYER ROOM CARD */}
-      <section className="glass-card rounded-2xl p-6 sm:p-8 border border-rose-500/30 space-y-6 relative overflow-hidden bg-gradient-to-r from-zinc-900 via-rose-950/20 to-zinc-900 shadow-xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
-              <Radio className="w-5 h-5 animate-pulse text-rose-400" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-lg font-bold text-white">Live Multiplayer Couple Room</h2>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center space-x-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>Real-time Sync Active</span>
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Both devices connect via your shared couple code (<span className="font-mono text-rose-300 font-bold">{couple.invite_code}</span>). Answers sync instantly!
-              </p>
-            </div>
+      {/* ACTIVE SESSIONS AND INVITATIONS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Pending Invitations */}
+        <section className="glass-card rounded-2xl p-6 sm:p-8 border border-rose-500/30 space-y-4">
+          <div className="flex items-center space-x-2 border-b border-zinc-800 pb-4">
+            <Inbox className="w-5 h-5 text-amber-400" />
+            <h2 className="text-lg font-bold text-white">Pending Invitations</h2>
+            {invitations.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold">
+                {invitations.length}
+              </span>
+            )}
           </div>
-
-          {/* Room Code Badge & Copy */}
-          <div className="flex items-center space-x-2 bg-zinc-950 p-2 rounded-xl border border-zinc-800">
-            <span className="text-xs text-zinc-400 font-medium">Room Code:</span>
-            <span className="font-mono font-bold text-xs text-rose-300 bg-rose-500/20 px-2 py-1 rounded border border-rose-500/30">
-              {defaultRoomCode}
-            </span>
-            <button
-              onClick={handleCopyCode}
-              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 transition-colors"
-              title="Copy Room Code"
-            >
-              {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Room Status & Join Form */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           
-          {/* Active Partner Connection State */}
-          <div className="bg-zinc-950/80 p-4 rounded-xl border border-zinc-800 space-y-3 text-xs">
-            <h3 className="font-bold text-white uppercase tracking-wider text-[11px]">Room Connection Status</h3>
-            
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center space-x-2">
-                <img src={currentUser.avatar} className="w-7 h-7 rounded-full object-cover ring-2 ring-rose-500" />
-                <span className="font-bold text-white">{currentUser.name}</span>
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {invitesLoading ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="w-6 h-6 text-rose-500 animate-spin" />
               </div>
-              <span className="text-emerald-400 font-semibold flex items-center space-x-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>Connected</span>
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-              <div className="flex items-center space-x-2">
-                <img src={partner?.avatar} className="w-7 h-7 rounded-full object-cover ring-2 ring-pink-500" />
-                <span className="font-bold text-white">{partner?.name}</span>
-              </div>
-              <span className="text-emerald-400 font-semibold flex items-center space-x-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>Linked</span>
-              </span>
-            </div>
+            ) : invitations.length === 0 ? (
+              <p className="text-xs text-zinc-400 text-center py-4">No pending game invitations</p>
+            ) : (
+              invitations.map(invite => (
+                <div key={invite.id} className="bg-zinc-950/80 rounded-xl p-4 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-white">{getGameLabel(invite.game_type)}</h3>
+                    <p className="text-xs text-zinc-400 mt-1">From {partner?.name.split(' ')[0]}</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5">Sent {formatDate(invite.created_at)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => declineInvite.mutate(invite.id)}
+                      disabled={declineInvite.isPending || acceptInvite.isPending}
+                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold disabled:opacity-50"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleAccept(invite.id, invite.game_type)}
+                      disabled={acceptInvite.isPending || declineInvite.isPending}
+                      className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md disabled:opacity-50"
+                    >
+                      Accept & Play
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
+        </section>
 
-          {/* Enter Room Code Input */}
-          <form onSubmit={handleJoinSubmit} className="space-y-3">
-            <label className="block text-xs font-bold text-zinc-300">
-              Join Partner's Active Room:
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder={`e.g. ${defaultRoomCode}`}
-                value={roomInput}
-                onChange={(e) => setRoomInput(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-rose-500 text-white text-xs font-mono tracking-wider focus:outline-none uppercase"
-              />
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md transition-all flex-shrink-0"
-              >
-                Join Room
-              </button>
-            </div>
-            {joinMsg && <p className="text-xs font-medium text-rose-300">{joinMsg}</p>}
-          </form>
-
-        </div>
-      </section>
+        {/* Active Sessions */}
+        <section className="glass-card rounded-2xl p-6 sm:p-8 border border-emerald-500/30 space-y-4">
+          <div className="flex items-center space-x-2 border-b border-zinc-800 pb-4">
+            <Radio className="w-5 h-5 text-emerald-400 animate-pulse" />
+            <h2 className="text-lg font-bold text-white">Active Games</h2>
+            {sessions.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">
+                {sessions.length}
+              </span>
+            )}
+          </div>
+          
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {sessionsLoading ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+              </div>
+            ) : sessions.length === 0 ? (
+              <p className="text-xs text-zinc-400 text-center py-4">No active games right now</p>
+            ) : (
+              sessions.map(session => (
+                <div key={session.id} className="bg-zinc-950/80 rounded-xl p-4 border border-zinc-800 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white">{getGameLabel(session.game_type)}</h3>
+                    <p className="text-[10px] text-zinc-400 mt-1 capitalize">
+                      Status: <span className="text-emerald-400 font-semibold">{session.status.replace(/_/g, ' ')}</span>
+                    </p>
+                  </div>
+                  <Link
+                    href={`${getGameLink(session.game_type)}?session=${session.id}`}
+                    className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
+                  >
+                    <Play className="w-4 h-4 ml-0.5" />
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
 
       {/* Main Game Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -174,13 +202,22 @@ export default function GamesHubPage() {
             </div>
           </div>
 
-          <Link
-            href="/games/know-me"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
-          >
-            <span>Play Know Me</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => sendInvite.mutate('know_me')}
+              disabled={sendInvite.isPending}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
+            >
+              <span>Invite</span>
+            </button>
+            <Link
+              href="/games/know-me"
+              className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            >
+              <span>Play Know Me</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* 2. This or That */}
@@ -205,13 +242,22 @@ export default function GamesHubPage() {
             </div>
           </div>
 
-          <Link
-            href="/games/this-or-that"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
-          >
-            <span>Play This or That</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => sendInvite.mutate('this_or_that')}
+              disabled={sendInvite.isPending}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
+            >
+              <span>Invite</span>
+            </button>
+            <Link
+              href="/games/this-or-that"
+              className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            >
+              <span>Play This or That</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* 3. Would You Rather */}
@@ -236,13 +282,22 @@ export default function GamesHubPage() {
             </div>
           </div>
 
-          <Link
-            href="/games/would-you-rather"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
-          >
-            <span>Play Would You Rather</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => sendInvite.mutate('would_you_rather')}
+              disabled={sendInvite.isPending}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 border border-zinc-700"
+            >
+              <span>Invite</span>
+            </button>
+            <Link
+              href="/games/would-you-rather"
+              className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-xs shadow-md flex items-center justify-center space-x-2 transition-all"
+            >
+              <span>Play Would You Rather</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* 4. Compatibility Quiz */}

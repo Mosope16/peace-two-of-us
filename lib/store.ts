@@ -8,11 +8,7 @@ interface LDRState {
   currentUser: User;
   partner: User;
   couple: Couple;
-  memories: Memory[];
-  loveLetters: LoveLetter[];
-  moods: Record<string, MoodLog>; // user_id -> latest MoodLog
-  bucketList: BucketItem[];
-  countdowns: Countdown[];
+  // (Server state like memories, loveLetters, etc. are now handled by React Query)
   activePartnerId: string;
 
   // Games State
@@ -27,17 +23,6 @@ interface LDRState {
   logoutUser: () => void;
   switchActiveUser: (userId: string) => void;
   updateCoupleStartDate: (date: string) => void;
-  addMemory: (memory: Omit<Memory, 'id' | 'created_at' | 'couple_id'>) => void;
-  deleteMemory: (id: string) => void;
-  addLoveLetter: (letter: Omit<LoveLetter, 'id' | 'created_at' | 'couple_id'>) => void;
-  deleteLoveLetter: (id: string) => void;
-  markLetterRead: (id: string) => void;
-  setMood: (mood: MoodType, note?: string) => void;
-  toggleBucketItem: (id: string) => void;
-  addBucketItem: (item: Omit<BucketItem, 'id' | 'created_at' | 'couple_id' | 'completed'>) => void;
-  deleteBucketItem: (id: string) => void;
-  addCountdown: (countdown: Omit<Countdown, 'id' | 'created_at' | 'couple_id'>) => void;
-  deleteCountdown: (id: string) => void;
   pairWithCode: (code: string) => boolean;
 
   // Games Actions
@@ -75,12 +60,6 @@ const INITIAL_COUPLE: Couple = {
   is_connected: false,
 };
 
-const INITIAL_MEMORIES: Memory[] = [];
-const INITIAL_LOVE_LETTERS: LoveLetter[] = [];
-const INITIAL_MOODS: Record<string, MoodLog> = {};
-const INITIAL_BUCKET_LIST: BucketItem[] = [];
-const INITIAL_COUNTDOWNS: Countdown[] = [];
-
 export const useLDRStore = create<LDRState>()(
   persist(
     (set, get) => ({
@@ -88,11 +67,6 @@ export const useLDRStore = create<LDRState>()(
       currentUser: DEFAULT_USER_1,
       partner: DEFAULT_USER_2,
       couple: INITIAL_COUPLE,
-      memories: INITIAL_MEMORIES,
-      loveLetters: INITIAL_LOVE_LETTERS,
-      moods: INITIAL_MOODS,
-      bucketList: INITIAL_BUCKET_LIST,
-      countdowns: INITIAL_COUNTDOWNS,
       activePartnerId: DEFAULT_USER_1.id,
 
       // Games Initial State
@@ -151,101 +125,6 @@ export const useLDRStore = create<LDRState>()(
         set((state) => ({
           couple: { ...state.couple, relationship_start_date: date },
         }));
-      },
-
-      addMemory: (memoryData) => {
-        const newMemory: Memory = {
-          ...memoryData,
-          id: `mem-${Date.now()}`,
-          couple_id: get().couple.id,
-          created_at: new Date().toISOString(),
-        };
-        set((state) => ({ memories: [newMemory, ...state.memories] }));
-      },
-
-      deleteMemory: (id: string) => {
-        set((state) => ({ memories: state.memories.filter((m) => m.id !== id) }));
-      },
-
-      addLoveLetter: (letterData) => {
-        const newLetter: LoveLetter = {
-          ...letterData,
-          id: `letter-${Date.now()}`,
-          couple_id: get().couple.id,
-          created_at: new Date().toISOString(),
-          is_read: false,
-        };
-        set((state) => ({ loveLetters: [newLetter, ...state.loveLetters] }));
-      },
-
-      deleteLoveLetter: (id: string) => {
-        set((state) => ({ loveLetters: state.loveLetters.filter((l) => l.id !== id) }));
-      },
-
-      markLetterRead: (id: string) => {
-        set((state) => ({
-          loveLetters: state.loveLetters.map((l) =>
-            l.id === id ? { ...l, is_read: true } : l
-          ),
-        }));
-      },
-
-      setMood: (mood: MoodType, note?: string) => {
-        const userId = get().currentUser.id;
-        const newMood: MoodLog = {
-          id: `mood-${Date.now()}`,
-          user_id: userId,
-          mood,
-          note,
-          created_at: new Date().toISOString(),
-        };
-
-        set((state) => ({
-          moods: { ...state.moods, [userId]: newMood },
-        }));
-      },
-
-      toggleBucketItem: (id: string) => {
-        set((state) => ({
-          bucketList: state.bucketList.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  completed: !item.completed,
-                  completed_at: !item.completed ? new Date().toISOString() : undefined,
-                }
-              : item
-          ),
-        }));
-      },
-
-      addBucketItem: (itemData) => {
-        const newItem: BucketItem = {
-          ...itemData,
-          id: `bucket-${Date.now()}`,
-          couple_id: get().couple.id,
-          completed: false,
-          created_at: new Date().toISOString(),
-        };
-        set((state) => ({ bucketList: [newItem, ...state.bucketList] }));
-      },
-
-      deleteBucketItem: (id: string) => {
-        set((state) => ({ bucketList: state.bucketList.filter((b) => b.id !== id) }));
-      },
-
-      addCountdown: (countdownData) => {
-        const newCountdown: Countdown = {
-          ...countdownData,
-          id: `cd-${Date.now()}`,
-          couple_id: get().couple.id,
-          created_at: new Date().toISOString(),
-        };
-        set((state) => ({ countdowns: [...state.countdowns, newCountdown] }));
-      },
-
-      deleteCountdown: (id: string) => {
-        set((state) => ({ countdowns: state.countdowns.filter((c) => c.id !== id) }));
       },
 
       pairWithCode: (code: string) => {

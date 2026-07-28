@@ -70,8 +70,8 @@ export async function signUpUser(
     });
 
     if (authError) {
-      console.warn('Supabase Auth Notice (using session fallback):', authError.message);
-      return { user: fallbackUser, partner: mode === 'join' ? fallbackCouple.partner_one : null, couple: fallbackCouple };
+      console.warn('Supabase Auth Error:', authError.message);
+      throw authError;
     }
 
     const authUser = authData.user;
@@ -89,6 +89,20 @@ export async function signUpUser(
       created_at: new Date().toISOString(),
     };
 
+    // Insert user first to satisfy foreign key constraint in couples
+    const { error: userInitError } = await supabase.from('users').upsert({
+      id: realUserId,
+      name,
+      username: cleanUsername,
+      email,
+      avatar,
+    });
+
+    if (userInitError) {
+      console.error('User profile init failed:', userInitError);
+      throw userInitError;
+    }
+
     let coupleObj: Couple = fallbackCouple;
     let partnerObj: User | null = null;
 
@@ -101,11 +115,16 @@ export async function signUpUser(
 
       const existingCouple = existingCouples && existingCouples[0];
       if (existingCouple) {
-        // Link partner_two and mark connected
-        await supabase
+        // Link partner_two
+        const { error: joinError } = await supabase
           .from('couples')
-          .update({ partner_two: realUserId, is_connected: true })
+          .update({ partner_two: realUserId })
           .eq('id', existingCouple.id);
+
+        if (joinError) {
+          console.error('Failed to join couple room:', joinError);
+          throw joinError;
+        }
 
         partnerObj = existingCouple.partner_one_data || null;
 
@@ -120,13 +139,12 @@ export async function signUpUser(
       }
     } else {
       // Create new Couple record
-      const { data: newCouple } = await supabase
+      const { data: newCouple, error: coupleInsertError } = await supabase
         .from('couples')
         .insert({
           partner_one: realUserId,
           invite_code: inviteCode,
           relationship_start_date: new Date().toISOString(),
-          is_connected: false,
         })
         .select()
         .single();
@@ -140,28 +158,27 @@ export async function signUpUser(
           invite_code: newCouple.invite_code,
           is_connected: false,
         };
+      } else {
+        console.error('Couple insert failed:', coupleInsertError);
+        throw new Error('Failed to create couple room: ' + (coupleInsertError?.message || 'Unknown error'));
       }
     }
 
-    // Insert or update User profile row with couple_id
-    try {
-      await supabase.from('users').upsert({
-        id: realUserId,
-        name,
-        username: cleanUsername,
-        email,
-        avatar,
-        couple_id: coupleObj.id,
-      });
-    } catch (e) {
-      console.warn('User profile insert skipped:', e);
+    // Update User profile row with couple_id
+    const { error: userError } = await supabase.from('users').update({
+      couple_id: coupleObj.id,
+    }).eq('id', realUserId);
+
+    if (userError) {
+      console.error('User profile couple link failed:', userError);
+      throw userError;
     }
 
     return { user: realUser, partner: partnerObj, couple: coupleObj };
 
   } catch (err: any) {
-    console.warn('Supabase fetch failed. Using fallback session:', err?.message || err);
-    return { user: fallbackUser, partner: mode === 'join' ? fallbackCouple.partner_one : null, couple: fallbackCouple };
+    console.error('Supabase fetch failed:', err?.message || err);
+    throw err;
   }
 }
 
@@ -199,8 +216,8 @@ export async function signInUser(email: string, pass: string) {
     });
 
     if (authError) {
-      console.warn('Supabase Auth Login notice (using fallback session):', authError.message);
-      return { currentUser: fallbackUser, partnerUser: null, couple: fallbackCouple };
+      console.warn('Supabase Auth Login error:', authError.message);
+      throw authError;
     }
 
     const realUserId = authData.user?.id;
@@ -210,37 +227,79 @@ export async function signInUser(email: string, pass: string) {
 
     // Fetch User Row
     let currentUserObj: User = fallbackUser;
-    try {
-      const { data: userData } = await supabase.from('users').select('*').eq('id', realUserId).single();
-      if (userData) {
-        currentUserObj = userData;
+    const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', realUserId).single();
+    
+    if (userError) {
+      if (userError.code === 'PGRST116') {
+        // Auto-heal partial signup state
+        console.warn('User profile missing. Auto-healing partial signup...');
+        const name = authData.user?.user_metadata?.name || email.split('@')[0];
+        const username = authData.user?.user_metadata?.username;
+        const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username || name)}`;
+
+        const { error: repairError } = await supabase.from('users').upsert({
+          id: realUserId,
+          name,
+          username,
+          email,
+          avatar,
+        });
+        
+        if (repairError) {
+           console.error('Failed to auto-heal user profile:', repairError);
+           throw repairError;
+        }
+        
+        const inviteCode = generateInviteCode();
+        const { data: newCouple, error: coupleInsertError } = await supabase
+          .from('couples')
+          .insert({
+            partner_one: realUserId,
+            invite_code: inviteCode,
+            relationship_start_date: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (coupleInsertError) throw coupleInsertError;
+        
+        await supabase.from('users').update({ couple_id: newCouple.id }).eq('id', realUserId);
+
+        const { data: retryData } = await supabase.from('users').select('*').eq('id', realUserId).single();
+        if (retryData) {
+            currentUserObj = retryData;
+        }
+      } else {
+        console.error('User fetch failed:', userError);
+        throw userError;
       }
-    } catch (e) {
-      console.warn('User fetch notice:', e);
+    } else if (userData) {
+      currentUserObj = userData;
     }
 
     // Fetch Couple Row where user is partner_one or partner_two
     let partnerUser: User | null = null;
-    try {
-      const { data: coupleRows } = await supabase
-        .from('couples')
-        .select('*, partner_one_data:users!partner_one(*), partner_two_data:users!partner_two(*)')
-        .or(`partner_one.eq.${realUserId},partner_two.eq.${realUserId}`);
+    const { data: coupleRows, error: coupleError } = await supabase
+      .from('couples')
+      .select('*, partner_one_data:users!partner_one(*), partner_two_data:users!partner_two(*)')
+      .or(`partner_one.eq.${realUserId},partner_two.eq.${realUserId}`);
 
-      const coupleRow = coupleRows && coupleRows[0];
-      if (coupleRow) {
-        fallbackCouple.id = coupleRow.id;
-        fallbackCouple.invite_code = coupleRow.invite_code;
-        fallbackCouple.relationship_start_date = coupleRow.relationship_start_date;
+    if (coupleError) {
+      console.error('Couple fetch failed:', coupleError);
+      throw coupleError;
+    }
 
-        if (coupleRow.partner_one === realUserId && coupleRow.partner_two_data) {
-          partnerUser = coupleRow.partner_two_data;
-        } else if (coupleRow.partner_two === realUserId && coupleRow.partner_one_data) {
-          partnerUser = coupleRow.partner_one_data;
-        }
+    const coupleRow = coupleRows && coupleRows[0];
+    if (coupleRow) {
+      fallbackCouple.id = coupleRow.id;
+      fallbackCouple.invite_code = coupleRow.invite_code;
+      fallbackCouple.relationship_start_date = coupleRow.relationship_start_date;
+
+      if (coupleRow.partner_one === realUserId && coupleRow.partner_two_data) {
+        partnerUser = coupleRow.partner_two_data;
+      } else if (coupleRow.partner_two === realUserId && coupleRow.partner_one_data) {
+        partnerUser = coupleRow.partner_one_data;
       }
-    } catch (e) {
-      console.warn('Couple fetch notice:', e);
     }
 
     fallbackCouple.partner_two = partnerUser;
@@ -249,8 +308,8 @@ export async function signInUser(email: string, pass: string) {
     return { currentUser: currentUserObj, partnerUser, couple: fallbackCouple };
 
   } catch (err: any) {
-    console.warn('Supabase login fetch failed. Using fallback session:', err?.message || err);
-    return { currentUser: fallbackUser, partnerUser: null, couple: fallbackCouple };
+    console.error('Supabase login fetch failed:', err?.message || err);
+    throw err;
   }
 }
 
@@ -270,20 +329,30 @@ export async function linkPartnerWithInviteCode(inviteCode: string, currentUserI
   }
 
   try {
-    const { data: coupleRows } = await supabase
+    const { data: coupleRows, error: coupleError } = await supabase
       .from('couples')
       .select('*, partner_one_data:users!partner_one(*)')
       .eq('invite_code', cleanCode);
+
+    if (coupleError) {
+      console.error('Failed to fetch couple room:', coupleError);
+      throw coupleError;
+    }
 
     const coupleRow = coupleRows && coupleRows[0];
     if (!coupleRow) {
       return { success: false, partnerUser: null };
     }
 
-    await supabase
+    const { error: updateError } = await supabase
       .from('couples')
-      .update({ partner_two: currentUserId, is_connected: true })
+      .update({ partner_two: currentUserId })
       .eq('id', coupleRow.id);
+
+    if (updateError) {
+      console.error('Failed to link partner:', updateError);
+      throw updateError;
+    }
 
     const partnerUser: User = coupleRow.partner_one_data || {
       id: coupleRow.partner_one || `partner-${Date.now()}`,
@@ -294,9 +363,9 @@ export async function linkPartnerWithInviteCode(inviteCode: string, currentUserI
     };
 
     return { success: true, partnerUser, coupleRow };
-  } catch (err) {
-    console.warn('Link partner fetch notice:', err);
-    return { success: true, partnerUser: null };
+  } catch (err: any) {
+    console.error('Link partner error:', err);
+    throw err;
   }
 }
 

@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Image as ImageIcon, Plus, Calendar, User, Trash2, Search, X, Sparkles } from 'lucide-react';
+import { Image as ImageIcon, Plus, Calendar, User, Trash2, Search, X, Sparkles, Loader2 } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { formatDate, triggerLoveConfetti } from '@/lib/utils';
 import { Memory } from '@/types';
+import { useMemories, useAddMemory, useDeleteMemory } from '@/lib/queries/useMemories';
 
 const PRESET_PHOTOS = [
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80',
@@ -16,7 +17,11 @@ const PRESET_PHOTOS = [
 ];
 
 export default function MemoriesPage() {
-  const { memories, currentUser, partner, addMemory, deleteMemory } = useLDRStore();
+  const { currentUser, partner } = useLDRStore();
+  const { data: memories = [], isLoading } = useMemories();
+  const addMemory = useAddMemory();
+  const deleteMemory = useDeleteMemory();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
@@ -26,24 +31,21 @@ export default function MemoriesPage() {
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState(PRESET_PHOTOS[0]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [category, setCategory] = useState<'date' | 'trip' | 'milestone' | 'call' | 'surprise'>('date');
 
   const filteredMemories = memories.filter((m) =>
     m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.description.toLowerCase().includes(searchQuery.toLowerCase())
+    (m.description || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    addMemory({
+    addMemory.mutate({
       title,
       description,
       image_url: imageUrl,
       date: new Date(date).toISOString(),
-      created_by: currentUser.id,
-      category,
     });
 
     triggerLoveConfetti();
@@ -71,7 +73,8 @@ export default function MemoriesPage() {
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105 disabled:opacity-50"
+          disabled={addMemory.isPending}
         >
           <Plus className="w-4 h-4" />
           <span>Add New Memory</span>
@@ -91,7 +94,11 @@ export default function MemoriesPage() {
       </div>
 
       {/* Memory Gallery Grid */}
-      {filteredMemories.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+        </div>
+      ) : filteredMemories.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center space-y-3">
           <ImageIcon className="w-12 h-12 text-zinc-600 mx-auto" />
           <h3 className="text-base font-bold text-white">No memories found</h3>
@@ -102,12 +109,13 @@ export default function MemoriesPage() {
           {filteredMemories.map((mem) => {
             const isCreator = mem.created_by === currentUser.id;
             const creatorName = isCreator ? currentUser.name.split(' ')[0] : partner?.name.split(' ')[0] || 'Partner';
+            const isOptimistic = mem.id.startsWith('temp-');
 
             return (
               <div
                 key={mem.id}
                 onClick={() => setSelectedMemory(mem)}
-                className="glass-card glass-card-hover rounded-2xl overflow-hidden cursor-pointer group border border-rose-500/20 flex flex-col"
+                className={`glass-card glass-card-hover rounded-2xl overflow-hidden cursor-pointer group border border-rose-500/20 flex flex-col ${isOptimistic ? 'opacity-50' : ''}`}
               >
                 <div className="relative aspect-video overflow-hidden bg-zinc-900">
                   <img
@@ -138,9 +146,10 @@ export default function MemoriesPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteMemory(mem.id);
+                        deleteMemory.mutate(mem.id);
                       }}
-                      className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      disabled={deleteMemory.isPending || isOptimistic}
+                      className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
                       title="Delete Memory"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -238,9 +247,10 @@ export default function MemoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold shadow-md"
+                  disabled={addMemory.isPending}
+                  className="px-6 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold shadow-md disabled:opacity-50"
                 >
-                  Save Memory
+                  {addMemory.isPending ? 'Saving...' : 'Save Memory'}
                 </button>
               </div>
             </form>
