@@ -5,9 +5,15 @@ import { CheckSquare, Plus, Check, Trash2, Sparkles, X, Heart, Plane, Utensils, 
 import { useLDRStore } from '@/lib/store';
 import { triggerLoveConfetti, formatDate } from '@/lib/utils';
 import { BucketItem } from '@/types';
+import { useBucketList, useAddBucketItem, useToggleBucketItem, useDeleteBucketItem } from '@/lib/queries/useBucketList';
 
 export default function BucketListPage() {
-  const { bucketList, currentUser, toggleBucketItem, addBucketItem, deleteBucketItem } = useLDRStore();
+  const { currentUser } = useLDRStore();
+  const { data: bucketList = [] } = useBucketList();
+  const addBucketItem = useAddBucketItem();
+  const toggleBucketItem = useToggleBucketItem();
+  const deleteBucketItem = useDeleteBucketItem();
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
@@ -29,7 +35,7 @@ export default function BucketListPage() {
     e.preventDefault();
     if (!title.trim()) return;
 
-    addBucketItem({
+    addBucketItem.mutate({
       title,
       description,
       category,
@@ -42,7 +48,7 @@ export default function BucketListPage() {
   };
 
   const handleToggle = (id: string, currentlyCompleted: boolean) => {
-    toggleBucketItem(id);
+    toggleBucketItem.mutate({ id, completed: !currentlyCompleted });
     if (!currentlyCompleted) {
       triggerLoveConfetti();
     }
@@ -153,7 +159,7 @@ export default function BucketListPage() {
             </div>
 
             <button
-              onClick={() => deleteBucketItem(item.id)}
+              onClick={() => deleteBucketItem.mutate(item.id)}
               className="p-2 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10"
             >
               <Trash2 className="w-4 h-4" />

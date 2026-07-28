@@ -4,9 +4,15 @@ import React from 'react';
 import { Clock, Heart, ImageIcon, Mail, Calendar, CheckSquare, Sparkles } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
+import { useMemories } from '@/lib/queries/useMemories';
+import { useLoveLetters } from '@/lib/queries/useLoveLetters';
+import { useBucketList } from '@/lib/queries/useBucketList';
 
 export default function TimelinePage() {
-  const { memories, loveLetters, countdowns, bucketList, couple } = useLDRStore();
+  const { couple } = useLDRStore();
+  const { data: memories = [] } = useMemories();
+  const { data: loveLetters = [] } = useLoveLetters();
+  const { data: bucketList = [] } = useBucketList();
 
   // Combine all items into a single unified chronological relationship timeline
   const timelineItems: Array<{

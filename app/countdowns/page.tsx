@@ -5,9 +5,14 @@ import { Calendar, Plus, Plane, Heart, Cake, GraduationCap, MapPin, Trash2, Cloc
 import { useLDRStore } from '@/lib/store';
 import { calculateCountdownDays, formatDate, triggerLoveConfetti } from '@/lib/utils';
 import { Countdown } from '@/types';
+import { useCountdowns, useAddCountdown, useDeleteCountdown } from '@/lib/queries/useCountdowns';
 
 export default function CountdownsPage() {
-  const { countdowns, currentUser, addCountdown, deleteCountdown } = useLDRStore();
+  const { currentUser } = useLDRStore();
+  const { data: countdowns = [] } = useCountdowns();
+  const addCountdown = useAddCountdown();
+  const deleteCountdown = useDeleteCountdown();
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Form state
@@ -19,7 +24,7 @@ export default function CountdownsPage() {
     e.preventDefault();
     if (!title.trim() || !targetDate) return;
 
-    addCountdown({
+    addCountdown.mutate({
       title,
       target_date: new Date(targetDate).toISOString(),
       category,
@@ -96,7 +101,7 @@ export default function CountdownsPage() {
                 </div>
 
                 <button
-                  onClick={() => deleteCountdown(cd.id)}
+                  onClick={() => deleteCountdown.mutate(cd.id)}
                   className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10"
                 >
                   <Trash2 className="w-4 h-4" />

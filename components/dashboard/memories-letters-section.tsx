@@ -6,12 +6,13 @@ import { ImageIcon, Mail, Lock, Unlock, ChevronRight, CheckSquare } from 'lucide
 import { useLDRStore } from '@/lib/store';
 import { useMemories } from '@/lib/queries/useMemories';
 import { useLoveLetters } from '@/lib/queries/useLoveLetters';
+import { useBucketList } from '@/lib/queries/useBucketList';
 import { formatDate, isLetterLocked } from '@/lib/utils';
 
 export function MemoriesLettersSection() {
-  const { bucketList } = useLDRStore();
   const { data: memories = [] } = useMemories();
   const { data: loveLetters = [] } = useLoveLetters();
+  const { data: bucketList = [] } = useBucketList();
 
   // Latest Memory
   const latestMemory = memories[0];
