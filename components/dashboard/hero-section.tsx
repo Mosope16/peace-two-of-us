@@ -36,10 +36,16 @@ export function HeroSection() {
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-4 ring-pink-500/40 shadow-lg -ml-4"
               />
             ) : (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-zinc-900 border-2 border-dashed border-rose-500/50 flex flex-col items-center justify-center -ml-4 text-rose-400 font-bold shadow-lg">
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(couple.invite_code);
+                  alert('Invite code copied to clipboard! Share it with your partner.');
+                }}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-zinc-900 border-2 border-dashed border-rose-500/50 flex flex-col items-center justify-center -ml-4 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 font-bold shadow-lg transition-all"
+              >
                 <Plus className="w-6 h-6" />
                 <span className="text-[9px]">Invite</span>
-              </div>
+              </button>
             )}
           </div>
 

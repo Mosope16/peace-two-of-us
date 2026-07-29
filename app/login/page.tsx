@@ -68,6 +68,26 @@ export default function LoginPage() {
     }
   };
 
+  if (!userLoaded) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-rose-500/50" />
+      </div>
+    );
+  }
+
+  if (isSignedIn) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2">
+          <CheckCircle2 className="w-8 h-8 animate-pulse" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Welcome back!</h2>
+        <p className="text-xs text-zinc-400">Taking you to your dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 glass-card p-8 sm:p-10 rounded-3xl border border-rose-500/30 shadow-2xl relative overflow-hidden bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-rose-950/20">

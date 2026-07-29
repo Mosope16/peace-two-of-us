@@ -25,6 +25,6 @@
   - [ ] Deploy the app
   - [ ] Test the live Google sign-in flow in production
 
-- [ ] 6. **Polish and finalize**
-  - [ ] Improve any loading or error states around auth
-  - [ ] Make the login experience feel consistent with the rest of the app
+- [x] 6. **Polish and finalize**
+  - [x] Improve any loading or error states around auth
+  - [x] Make the login experience feel consistent with the rest of the app

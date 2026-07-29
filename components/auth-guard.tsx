@@ -55,10 +55,43 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const isPublic = PUBLIC_ROUTES.includes(pathname);
 
   if (isSignedIn && !isAuthenticated && !isPublic) {
+    if (syncError) {
+      return (
+        <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-2">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Connection Error</h2>
+          <p className="text-xs text-zinc-400 max-w-sm">
+            {syncError}
+          </p>
+          <div className="flex space-x-3 pt-4">
+            <button
+              onClick={() => {
+                setSyncError('');
+              }}
+              className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => {
+                logoutUser();
+                router.replace('/login');
+              }}
+              className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/20 text-xs font-semibold transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
-        <p className="text-xs text-zinc-400">{syncError || 'Preparing your private space...'}</p>
+        <p className="text-xs text-zinc-400">Preparing your private space...</p>
       </div>
     );
   }
