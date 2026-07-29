@@ -34,7 +34,7 @@ export default function Navbar() {
 
   const canShowPrivateNav = isLoaded && isSignedIn && isAuthenticated;
   const activeMoodLog = canShowPrivateNav ? moodLogs.find((m) => m.user_id === currentUser.id) : null;
-  const partnerMoodLog = canShowPrivateNav && partner && couple.is_connected ? moodLogs.find((m) => m.user_id === partner.id) : null;
+  const partnerMoodLog = canShowPrivateNav && partner && couple && (couple.status === 'connected' || couple.is_connected) ? moodLogs.find((m) => m.user_id === partner.id) : null;
   const partnerMoodDetails = partnerMoodLog ? getMoodDetails(partnerMoodLog.mood) : null;
 
   const navLinks = [

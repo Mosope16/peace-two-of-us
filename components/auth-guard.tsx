@@ -48,10 +48,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isLoaded, isSignedIn, pathname, router, setAuthenticatedUser, logoutUser, user]);
 
-  if (!isLoaded) {
-    return null;
-  }
-
   const isPublic = PUBLIC_ROUTES.includes(pathname);
   const isOnboarding = pathname === '/onboarding';
 
@@ -65,6 +61,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     }
   }, [isAuthenticated, currentUser, isOnboarding, router]);
+
+  if (!isLoaded) {
+    return null;
+  }
 
   if (isSignedIn && !isAuthenticated && !isPublic) {
     if (syncError) {
