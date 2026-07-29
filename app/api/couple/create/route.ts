@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
-import { generateInviteCode } from '@/lib/auth';
-import { stableUuidFromClerkId } from '@/lib/server/auth-utils';
+import { generateInviteCode, stableUuidFromClerkId } from '@/lib/server/auth-utils';
 
 export async function POST() {
   const clerkUser = await currentUser();

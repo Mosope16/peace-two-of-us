@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
-import { generateInviteCode } from '@/lib/auth';
+import { generateInviteCode } from '@/lib/server/auth-utils';
 import type { Couple, User } from '@/types';
 
 type UserRow = {
