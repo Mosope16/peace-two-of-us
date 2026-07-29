@@ -51,6 +51,14 @@ export default function OnboardingPage() {
     joinCoupleMutation.mutate(inviteCode);
   };
 
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (val.length > 4) {
+      val = val.slice(0, 4) + '-' + val.slice(4, 8);
+    }
+    setInviteCode(val);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-zinc-950">
       <div className="w-full max-w-md space-y-8 text-center">
@@ -114,8 +122,9 @@ export default function OnboardingPage() {
                 <input
                   type="text"
                   value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. A7KQ4P"
+                  onChange={handleCodeChange}
+                  maxLength={9}
+                  placeholder="e.g. A8XK-91PQ"
                   className="w-full h-14 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500 transition-colors uppercase tracking-widest text-center text-lg font-mono"
                   autoFocus
                 />
