@@ -53,8 +53,8 @@ export default function WouldYouRatherPage() {
       </div>
 
       {/* Main Card */}
-      <div className="glass-card rounded-3xl p-6 sm:p-10 border border-rose-500/30 relative overflow-hidden shadow-2xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-purple-950/20 text-center space-y-6">
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold">
+      <div className="soft-card rounded-3xl p-6 sm:p-10 border border-border relative overflow-hidden text-center space-y-6">
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-border text-purple-300 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
           <span>Would You Rather &bull; Couple Scenarios</span>
         </div>
@@ -69,7 +69,7 @@ export default function WouldYouRatherPage() {
               </div>
               <div className="w-full h-2 rounded-full bg-zinc-900 overflow-hidden border border-zinc-800">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                  className="h-full transition-all duration-300"
                   style={{ width: `${((currentQIndex + 1) / totalQuestions) * 100}%` }}
                 />
               </div>
@@ -88,11 +88,7 @@ export default function WouldYouRatherPage() {
                     key={idx}
                     disabled={userChoice !== null}
                     onClick={() => handleSelect(idx)}
-                    className={`p-6 rounded-2xl border text-lg font-bold transition-all flex flex-col items-center justify-center space-y-2 shadow-lg ${
-                      isSelected
-                        ? 'bg-purple-500/20 border-purple-500 text-white ring-2 ring-purple-500'
-                        : 'bg-zinc-900/80 border-zinc-800 text-zinc-200 hover:border-purple-500/50 hover:bg-zinc-800'
-                    }`}
+                    className={`p-6 rounded-2xl border text-lg font-bold transition-all flex flex-col items-center justify-center space-y-2 shadow-lg ${ isSelected ? 'bg-purple-500/20 border-purple-500 text-white ring-2 ring-purple-500' : 'bg-zinc-900/80 border-zinc-800 text-zinc-200 hover:border-border hover:bg-zinc-800' }`}
                   >
                     <span>{opt}</span>
                   </button>
@@ -102,7 +98,7 @@ export default function WouldYouRatherPage() {
 
             {/* Reveal Result Card */}
             {userChoice !== null && (
-              <div className="p-6 rounded-2xl bg-zinc-950 border border-purple-500/40 space-y-4 animate-fadeIn">
+              <div className="p-6 rounded-2xl bg-zinc-950 border border-border space-y-4 animate-fadeIn">
                 <div className="flex items-center justify-center space-x-6 text-sm font-semibold">
                   <div className="text-center">
                     <span className="text-zinc-400 text-xs block">Your Answer</span>
@@ -120,11 +116,11 @@ export default function WouldYouRatherPage() {
                 {partnerChoice !== null && (
                   <div className="pt-2">
                     {userChoice === partnerChoice ? (
-                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-extrabold">
+                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-border text-emerald-300 text-sm font-extrabold">
                         <span>✨ You both chose the exact same scenario!</span>
                       </div>
                     ) : (
-                      <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-extrabold">
+                      <div className="p-3 rounded-xl bg-rose-500/10 border border-border text-rose-300 text-sm font-extrabold">
                         <span>💬 Fun topic to chat about on your next call!</span>
                       </div>
                     )}
@@ -133,7 +129,7 @@ export default function WouldYouRatherPage() {
 
                 <button
                   onClick={handleNext}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm shadow-lg hover:shadow-purple-500/25 transition-all"
+                  className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:shadow-purple-500/25 transition-all"
                 >
                   {currentQIndex < totalQuestions - 1 ? 'Next Scenario →' : 'Finish Game 🏆'}
                 </button>
@@ -143,7 +139,7 @@ export default function WouldYouRatherPage() {
         ) : (
           /* Final Results Screen */
           <div className="space-y-6 py-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white shadow-xl shadow-purple-500/30">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl text-white shadow-xl shadow-purple-500/30">
               <Heart className="w-10 h-10 fill-white" />
             </div>
 
@@ -157,7 +153,7 @@ export default function WouldYouRatherPage() {
             <div className="flex items-center justify-center space-x-4">
               <button
                 onClick={restartGame}
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs flex items-center space-x-2 shadow-lg"
+                className="px-6 py-3.5 rounded-xl text-white font-bold text-xs flex items-center space-x-2 shadow-lg"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Play Again</span>

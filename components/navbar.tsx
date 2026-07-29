@@ -56,18 +56,15 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 glass-nav backdrop-blur-xl">
+      <header className="sticky top-0 z-40 bg-surface border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/dashboard" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:scale-105 transition-transform">
-                <Heart className="w-6 h-6 text-white fill-white animate-heartbeat" />
+              <div className="flex items-center justify-center text-primary font-bold text-2xl group-hover:scale-105 transition-transform">
+                ∞
               </div>
               <div>
-                <span className="font-bold text-xl tracking-tight text-gradient">TwoOfUs</span>
-                <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20">
-                  LDR Space
-                </span>
+                <span className="font-bold text-xl tracking-tight text-white">Peace</span>
               </div>
             </Link>
 
@@ -79,13 +76,9 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      isActive
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm'
-                        : 'text-zinc-300 hover:text-white hover:bg-white/5'
-                    }`}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${ isActive ? 'bg-primary/20 text-primary border border-primary/30 shadow-sm' : 'text-zinc-300 hover:text-white hover:bg-white/5' }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-rose-400' : 'text-zinc-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-zinc-400'}`} />
                     <span>{link.name}</span>
                   </Link>
                 );
@@ -96,7 +89,7 @@ export default function Navbar() {
               {!canShowPrivateNav ? (
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Sign in</span>
@@ -113,9 +106,9 @@ export default function Navbar() {
 
               <button
                 onClick={() => setIsMoodModalOpen(true)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-500/30 text-rose-300 hover:bg-rose-500/30 text-xs font-semibold transition-all shadow-sm"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30 text-xs font-semibold transition-all shadow-sm"
               >
-                <Smile className="w-4 h-4 text-rose-400" />
+                <Smile className="w-4 h-4 text-primary" />
                 <span className="hidden sm:inline">My Mood</span>
                 {activeMoodLog && <span className="text-sm">{getMoodDetails(activeMoodLog.mood).emoji}</span>}
               </button>
@@ -123,27 +116,27 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-2 p-1.5 rounded-lg bg-zinc-900/90 border border-rose-500/20 hover:border-rose-500/40 text-xs text-zinc-200 transition-all"
+                  className="flex items-center space-x-2 p-1.5 rounded-lg bg-surface border border-border hover:border-primary/40 text-xs text-zinc-200 transition-all"
                 >
                   <img
                     src={currentUser.avatar}
                     alt={currentUser.name}
-                    className="w-7 h-7 rounded-full object-cover ring-2 ring-rose-500/50"
+                    className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/50"
                   />
                   <span className="font-medium hidden md:inline">{currentUser.username || currentUser.name.split(' ')[0]}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 </button>
 
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl shadow-2xl p-2 z-50 border border-rose-500/30">
-                    <div className="px-3 py-2 border-b border-zinc-800 text-xs text-zinc-400">
+                  <div className="absolute right-0 mt-2 w-56 soft-card rounded-xl p-2 z-50">
+                    <div className="px-3 py-2 border-b border-border text-xs text-zinc-400">
                       <span>Account Menu</span>
                     </div>
 
                     <Link
                       href="/login"
                       onClick={() => setIsUserDropdownOpen(false)}
-                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold text-rose-300 hover:bg-rose-500/10 transition-colors"
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
                     >
                       <span>🔑 Sign In / Create Account</span>
                     </Link>
@@ -157,11 +150,11 @@ export default function Navbar() {
                       <span>Couple Settings</span>
                     </Link>
 
-                    <div className="my-1 border-t border-zinc-800/80" />
+                    <div className="my-1 border-t border-border" />
 
                     <button
                       onClick={handleSignOut}
-                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
                     >
                       <span>🚪 Sign Out</span>
                     </button>
@@ -174,7 +167,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {canShowPrivateNav && <div className="md:hidden flex items-center space-x-1 border-t border-rose-500/10 px-3 py-2 bg-zinc-950/90 text-xs overflow-x-auto no-scrollbar">
+        {canShowPrivateNav && <div className="md:hidden flex items-center space-x-1 border-t border-border px-3 py-2 bg-surface text-xs overflow-x-auto no-scrollbar">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -182,9 +175,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex flex-col items-center py-1.5 px-3 rounded-lg flex-shrink-0 transition-colors ${
-                  isActive ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30' : 'text-zinc-400 hover:text-zinc-200'
-                }`}
+                className={`flex flex-col items-center py-1.5 px-3 rounded-lg flex-shrink-0 transition-colors ${ isActive ? 'bg-primary/20 text-primary font-bold border border-primary/30' : 'text-zinc-400 hover:text-zinc-200' }`}
               >
                 <Icon className="w-4 h-4 mb-0.5" />
                 <span className="text-[10px] whitespace-nowrap">{link.name}</span>
@@ -196,7 +187,7 @@ export default function Navbar() {
 
       {isMoodModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-rose-500/30 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+          <div className="soft-card w-full max-w-md rounded-2xl p-6 border border-border relative animate-in fade-in zoom-in duration-200">
             <h3 className="text-xl font-bold text-gradient text-center mb-1">How are you feeling today?</h3>
             <p className="text-xs text-zinc-400 text-center mb-6">
               Your partner {partner?.name.split(' ')[0]} will see your latest mood on their dashboard ❤️

@@ -43,9 +43,9 @@ export default function SettingsPage() {
       </div>
 
       {/* 1. Couple Invitation Code Box */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-rose-500/30 space-y-4 relative overflow-hidden">
+      <div className="soft-card rounded-3xl p-6 sm:p-8 border border-border space-y-4 relative overflow-hidden">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-border flex items-center justify-center text-rose-400">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
@@ -55,7 +55,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-          <div className="px-6 py-3 rounded-xl bg-zinc-950 border border-rose-500/30 font-mono text-2xl font-black text-rose-300 tracking-widest">
+          <div className="px-6 py-3 rounded-xl bg-zinc-950 border border-border font-mono text-2xl font-black text-rose-300 tracking-widest">
             {couple.invite_code}
           </div>
           <button
@@ -67,7 +67,7 @@ export default function SettingsPage() {
           </button>
 
           {couple.is_connected && couple.partner_two ? (
-            <div className="px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center space-x-2">
+            <div className="px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-border text-emerald-300 text-xs font-semibold flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               <span>Connected with {couple.partner_two.name} ❤️</span>
             </div>
@@ -81,9 +81,9 @@ export default function SettingsPage() {
       </div>
 
       {/* 2. Relationship Start Date Editor */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-rose-500/20 space-y-4">
+      <div className="soft-card rounded-3xl p-6 sm:p-8 border border-border space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400">
+          <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-border flex items-center justify-center text-pink-400">
             <Calendar className="w-5 h-5" />
           </div>
           <div>
@@ -116,7 +116,7 @@ export default function SettingsPage() {
       </div>
 
       {/* 3. Connected Partners */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-rose-500/20 space-y-4">
+      <div className="soft-card rounded-3xl p-6 sm:p-8 border border-border space-y-4">
         <h2 className="text-lg font-bold text-white flex items-center space-x-2">
           <User className="w-5 h-5 text-purple-400" />
           <span>Connected Couple Profile</span>
@@ -142,9 +142,9 @@ export default function SettingsPage() {
       </div>
 
       {/* 4. Backend Database Status (Supabase) */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-rose-500/20 space-y-4">
+      <div className="soft-card rounded-3xl p-6 sm:p-8 border border-border space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-border flex items-center justify-center text-emerald-400">
             <Database className="w-5 h-5" />
           </div>
           <div>

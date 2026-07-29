@@ -99,15 +99,15 @@ export default function IQDuelPage() {
           <span>Back to Games Hub</span>
         </Link>
 
-        <div className="text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full font-medium">
+        <div className="text-xs text-purple-400 bg-purple-500/10 border border-border px-3 py-1 rounded-full font-medium">
           Playing as: <span className="font-bold">{currentUser.name}</span>
         </div>
       </div>
 
       {/* Header Banner */}
-      <div className="glass-card rounded-2xl p-6 border border-purple-500/30 space-y-4 bg-gradient-to-r from-purple-950/40 via-zinc-900 to-indigo-950/40">
+      <div className="soft-card rounded-2xl p-6 border border-border space-y-4 to-indigo-950/40">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-border flex items-center justify-center text-purple-300">
             <Brain className="w-6 h-6" />
           </div>
           <div>
@@ -124,11 +124,7 @@ export default function IQDuelPage() {
               setCurrentQuestionIndex(0);
               setIsGameOver(false);
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeMode === 'classic'
-                ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${ activeMode === 'classic' ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800' }`}
           >
             ⚡ Classic Mode (12 Qs • 10m)
           </button>
@@ -138,11 +134,7 @@ export default function IQDuelPage() {
               setCurrentQuestionIndex(0);
               setIsGameOver(false);
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeMode === 'marathon'
-                ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${ activeMode === 'marathon' ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800' }`}
           >
             🔥 Marathon Mode (20 Qs • 18m)
           </button>
@@ -171,7 +163,7 @@ export default function IQDuelPage() {
 
       {/* Main Game Interface */}
       {!isGameOver ? (
-        <div className="glass-card rounded-2xl p-6 sm:p-8 border border-purple-500/30 space-y-6">
+        <div className="soft-card rounded-2xl p-6 sm:p-8 border border-border space-y-6">
           {/* Question Header & Clock */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
             <div>
@@ -190,9 +182,7 @@ export default function IQDuelPage() {
             </div>
 
             {/* Per-Question Clock */}
-            <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl border font-mono font-bold text-sm shadow-inner self-start sm:self-auto ${
-              timerLeft <= 5 ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse' : 'bg-zinc-900 text-purple-300 border-purple-500/30'
-            }`}>
+            <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl border font-mono font-bold text-sm shadow-inner self-start sm:self-auto ${ timerLeft <= 5 ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse' : 'bg-zinc-900 text-purple-300 border-border' }`}>
               <Clock className="w-4 h-4" />
               <span>{timerLeft}s</span>
             </div>
@@ -229,11 +219,7 @@ export default function IQDuelPage() {
                 <button
                   key={idx}
                   onClick={() => handleSelectOption(idx)}
-                  className={`p-4 rounded-xl border text-left text-sm font-semibold transition-all relative ${
-                    isSelectedByMe
-                      ? 'bg-purple-500/20 border-purple-500 text-white ring-2 ring-purple-500 shadow-lg'
-                      : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-300'
-                  }`}
+                  className={`p-4 rounded-xl border text-left text-sm font-semibold transition-all relative ${ isSelectedByMe ? 'bg-purple-500/20 border-purple-500 text-white ring-2 ring-purple-500 shadow-lg' : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-300' }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{option}</span>
@@ -264,7 +250,7 @@ export default function IQDuelPage() {
             ) : (
               <button
                 onClick={() => setIsGameOver(true)}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-black text-xs shadow-lg transition-all"
+                className="px-6 py-2.5 rounded-xl hover:hover:text-white font-black text-xs shadow-lg transition-all"
               >
                 👑 Submit Duel & Reveal Results!
               </button>
@@ -273,7 +259,7 @@ export default function IQDuelPage() {
         </div>
       ) : (
         /* Grand End-Game Reveal Screen */
-        <div className="glass-card rounded-2xl p-8 border border-purple-500/40 text-center space-y-8 bg-gradient-to-b from-purple-950/40 via-zinc-900 to-zinc-950">
+        <div className="soft-card rounded-2xl p-8 border border-border text-center space-y-8 to-zinc-950">
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
             <Trophy className="w-4 h-4 text-amber-400" />
             <span>🤫 Grand Reveal — Final Scoreboard</span>
@@ -285,14 +271,14 @@ export default function IQDuelPage() {
 
           {/* Scores Comparison Cards */}
           <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-            <div className="bg-zinc-900/90 p-5 rounded-2xl border border-purple-500/30 space-y-2">
+            <div className="bg-zinc-900/90 p-5 rounded-2xl border border-border space-y-2">
               <img src={currentUser.avatar} className="w-12 h-12 rounded-full mx-auto object-cover ring-2 ring-purple-500/50" />
               <h3 className="font-bold text-white text-sm">{currentUser.name}</h3>
               <p className="text-3xl font-black text-purple-400">{myScore} pts</p>
               <p className="text-[11px] text-zinc-400">{myCorrectCount} / {questions.length} Correct</p>
             </div>
 
-            <div className="bg-zinc-900/90 p-5 rounded-2xl border border-pink-500/30 space-y-2">
+            <div className="bg-zinc-900/90 p-5 rounded-2xl border border-border space-y-2">
               <img src={partner?.avatar} className="w-12 h-12 rounded-full mx-auto object-cover ring-2 ring-pink-500/50" />
               <h3 className="font-bold text-white text-sm">{partner?.name}</h3>
               <p className="text-3xl font-black text-pink-400">{partnerScore} pts</p>

@@ -148,14 +148,14 @@ export default function KnowMeQuizPage() {
           <span>Back to Games Hub</span>
         </Link>
 
-        <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full font-medium">
+        <div className="text-xs text-rose-400 bg-rose-500/10 border border-border px-3 py-1 rounded-full font-medium">
           Playing as: <span className="font-bold">{currentUser.name}</span>
         </div>
       </div>
 
       {/* Header Title */}
       <div className="space-y-2">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-300 text-xs font-semibold border border-rose-500/20">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-300 text-xs font-semibold border border-border">
           <Sparkles className="w-3.5 h-3.5 text-rose-400" />
           <span>Know Me Quiz — 1 Minute Per Question</span>
         </div>
@@ -169,7 +169,7 @@ export default function KnowMeQuizPage() {
       {!isQuizActive && !isRoundFinished && (
         <div className="space-y-4">
           {!sessionId ? (
-            <div className="glass-card rounded-2xl p-8 border border-zinc-800 text-center space-y-4">
+            <div className="soft-card rounded-2xl p-8 border border-zinc-800 text-center space-y-4">
               <h2 className="text-xl font-bold text-white">No Active Session Selected</h2>
               <p className="text-sm text-zinc-400">Please go back to the Games Hub to invite your partner or join an active game.</p>
               <Link href="/games" className="inline-block px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md transition-all">
@@ -181,7 +181,7 @@ export default function KnowMeQuizPage() {
               <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
             </div>
           ) : session ? (
-            <div className="glass-card rounded-2xl p-8 border border-rose-500/30 text-center space-y-4">
+            <div className="soft-card rounded-2xl p-8 border border-border text-center space-y-4">
               <h2 className="text-xl font-bold text-white">
                 {session.status === 'completed' ? 'Game Completed!' : 'Waiting for Partner'}
               </h2>
@@ -202,9 +202,7 @@ export default function KnowMeQuizPage() {
                         <div key={a.id} className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-2 text-xs">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-rose-300">Q{idx + 1}: {a.question_text}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                              isMatch ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                            }`}>
+                            <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${ isMatch ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300' }`}>
                               {isMatch ? 'Match!' : 'Different'}
                             </span>
                           </div>
@@ -226,7 +224,7 @@ export default function KnowMeQuizPage() {
               )}
             </div>
           ) : (
-            <div className="glass-card rounded-2xl p-8 border border-zinc-800 text-center">
+            <div className="soft-card rounded-2xl p-8 border border-zinc-800 text-center">
               <h2 className="text-xl font-bold text-white">Session not found</h2>
             </div>
           )}
@@ -235,7 +233,7 @@ export default function KnowMeQuizPage() {
 
       {/* MID-QUIZ: ONE QUESTION AT A TIME WITH 1-MINUTE PER-QUESTION TIMER */}
       {isQuizActive && currentQuestion && (
-        <div className="glass-card rounded-2xl p-6 sm:p-8 border border-rose-500/30 space-y-6 relative overflow-hidden">
+        <div className="soft-card rounded-2xl p-6 sm:p-8 border border-border space-y-6 relative overflow-hidden">
           
           {/* Top Progress Bar & Per-Question 1-Minute Live Clock */}
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -250,9 +248,7 @@ export default function KnowMeQuizPage() {
             </div>
 
             {/* Per-Question 60s Live Countdown Clock */}
-            <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl border font-mono font-bold text-sm shadow-inner ${
-              timerSeconds <= 10 ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse' : 'bg-zinc-900 text-rose-300 border-rose-500/30'
-            }`}>
+            <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl border font-mono font-bold text-sm shadow-inner ${ timerSeconds <= 10 ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse' : 'bg-zinc-900 text-rose-300 border-border' }`}>
               <Clock className="w-4 h-4 text-rose-400" />
               <span>{timerSeconds}s</span>
             </div>
@@ -261,7 +257,7 @@ export default function KnowMeQuizPage() {
           {/* Progress Bar Track */}
           <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
             <div
-              className="bg-gradient-to-r from-rose-500 to-pink-500 h-full transition-all duration-300"
+              className="h-full transition-all duration-300"
               style={{ width: `${((currentQIndex + 1) / questionsList.length) * 100}%` }}
             />
           </div>
@@ -282,11 +278,7 @@ export default function KnowMeQuizPage() {
                 <button
                   key={idx}
                   onClick={() => handleSelectOption(currentQuestion.id, idx)}
-                  className={`p-4 sm:p-5 rounded-xl border text-left text-sm font-semibold transition-all relative group ${
-                    isMySelection
-                      ? 'bg-rose-500/30 border-rose-500 text-white ring-2 ring-rose-500 shadow-lg scale-[1.02]'
-                      : 'bg-zinc-950/80 border-zinc-800 hover:border-rose-500/50 hover:bg-zinc-900 text-zinc-200'
-                  }`}
+                  className={`p-4 sm:p-5 rounded-xl border text-left text-sm font-semibold transition-all relative group ${ isMySelection ? 'bg-rose-500/30 border-rose-500 text-white ring-2 ring-rose-500 shadow-lg scale-[1.02]' : 'bg-zinc-950/80 border-zinc-800 hover:border-border hover:bg-zinc-900 text-zinc-200' }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{option}</span>
@@ -327,8 +319,8 @@ export default function KnowMeQuizPage() {
 
       {/* QUIZ FINISHED / SUMMARY RESULTS SCREEN */}
       {isRoundFinished && (
-        <div className="glass-card rounded-2xl p-8 border border-rose-500/40 text-center space-y-8 bg-gradient-to-b from-rose-950/30 via-zinc-900 to-zinc-950 shadow-2xl animate-in fade-in duration-300">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold">
+        <div className="soft-card rounded-2xl p-8 border border-border text-center space-y-8 animate-in fade-in duration-300">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-border text-xs font-bold">
             <Trophy className="w-4 h-4 text-rose-400" />
             <span>Turn Completed!</span>
           </div>

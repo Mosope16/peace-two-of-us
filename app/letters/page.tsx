@@ -57,7 +57,7 @@ export default function LoveLettersPage() {
 
         <button
           onClick={() => setIsWriteModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 flex items-center space-x-2 transition-transform hover:scale-105 disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl hover:hover:text-white font-bold text-xs shadow-lg shadow-pink-500/25 flex items-center space-x-2 transition-transform hover:scale-105 disabled:opacity-50"
           disabled={addLoveLetter.isPending}
         >
           <Plus className="w-4 h-4" />
@@ -71,7 +71,7 @@ export default function LoveLettersPage() {
           <Loader2 className="w-8 h-8 text-pink-500 animate-spin" />
         </div>
       ) : loveLetters.length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 text-center space-y-3">
+        <div className="soft-card rounded-2xl p-12 text-center space-y-3">
           <Mail className="w-12 h-12 text-zinc-600 mx-auto" />
           <h3 className="text-base font-bold text-white">Your Mailbox is Empty</h3>
           <p className="text-xs text-zinc-400">Write your first letter to bring a big smile to your partner!</p>
@@ -96,11 +96,7 @@ export default function LoveLettersPage() {
                     setSelectedLetter(letter);
                   }
                 }}
-                className={`envelope-bg rounded-2xl p-6 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between space-y-4 ${
-                  locked
-                    ? 'border-amber-500/30 hover:border-amber-500/50'
-                    : 'border-pink-500/30 hover:border-pink-500/60 hover:shadow-xl hover:shadow-pink-500/10'
-                } ${isOptimistic ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`envelope-bg rounded-2xl p-6 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between space-y-4 ${ locked ? 'border-amber-500/30 hover:border-amber-500/50' : 'border-border hover:border-border hover:shadow-xl hover:shadow-pink-500/10' } ${isOptimistic ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -116,7 +112,7 @@ export default function LoveLettersPage() {
                       <span>Locked until {formatDate(letter.unlock_date || '')}</span>
                     </span>
                   ) : (
-                    <span className="flex items-center space-x-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="flex items-center space-x-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-border">
                       <Unlock className="w-3 h-3" />
                       <span>Unlocked</span>
                     </span>
@@ -169,7 +165,7 @@ export default function LoveLettersPage() {
       {/* Write Letter Modal */}
       {isWriteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="glass-card w-full max-w-lg rounded-2xl p-6 border border-pink-500/30 shadow-2xl relative space-y-4">
+          <div className="soft-card w-full max-w-lg rounded-2xl p-6 border border-border relative space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-pink-400" />
@@ -241,7 +237,7 @@ export default function LoveLettersPage() {
       {/* Letter Reading Overlay */}
       {selectedLetter && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="glass-card w-full max-w-2xl rounded-3xl p-8 border border-pink-500/40 shadow-2xl relative space-y-6 max-h-[85vh] overflow-y-auto">
+          <div className="soft-card w-full max-w-2xl rounded-3xl p-8 border border-border relative space-y-6 max-h-[85vh] overflow-y-auto">
             <button
               onClick={() => setSelectedLetter(null)}
               className="absolute top-4 right-4 p-2 rounded-full bg-zinc-900 text-zinc-400 hover:text-white"
@@ -250,7 +246,7 @@ export default function LoveLettersPage() {
             </button>
 
             <div className="flex items-center space-x-3 border-b border-zinc-800 pb-4">
-              <div className="w-10 h-10 rounded-full bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400">
+              <div className="w-10 h-10 rounded-full bg-pink-500/20 border border-border flex items-center justify-center text-pink-400">
                 <Heart className="w-5 h-5 fill-pink-400" />
               </div>
               <div>
@@ -259,7 +255,7 @@ export default function LoveLettersPage() {
               </div>
             </div>
 
-            <div className="py-4 whitespace-pre-wrap font-serif text-base text-zinc-200 leading-relaxed italic border-l-2 border-pink-500/50 pl-6">
+            <div className="py-4 whitespace-pre-wrap font-serif text-base text-zinc-200 leading-relaxed italic border-l-2 border-border pl-6">
               {selectedLetter.content}
             </div>
 

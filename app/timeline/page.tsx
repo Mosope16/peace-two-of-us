@@ -36,7 +36,7 @@ export default function TimelinePage() {
     date: couple.relationship_start_date,
     icon: Heart,
     color: 'text-rose-400',
-    bgColor: 'bg-rose-500/20 border-rose-500/40',
+    bgColor: 'bg-rose-500/20 border-border',
   });
 
   // Add Memories
@@ -64,7 +64,7 @@ export default function TimelinePage() {
       date: letter.created_at,
       icon: Mail,
       color: 'text-pink-400',
-      bgColor: 'bg-pink-500/20 border-pink-500/40',
+      bgColor: 'bg-pink-500/20 border-border',
     });
   });
 
@@ -78,7 +78,7 @@ export default function TimelinePage() {
       date: b.completed_at || b.created_at,
       icon: CheckSquare,
       color: 'text-emerald-400',
-      bgColor: 'bg-emerald-500/20 border-emerald-500/40',
+      bgColor: 'bg-emerald-500/20 border-border',
     });
   });
 
@@ -102,7 +102,7 @@ export default function TimelinePage() {
       {/* Timeline Vertical Feed */}
       <div className="relative max-w-3xl mx-auto py-6">
         {/* Vertical Line Connector */}
-        <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-rose-500 via-pink-500 to-purple-500/20" />
+        <div className="absolute left-6 top-6 bottom-6 w-0.5 to-purple-500/20" />
 
         <div className="space-y-8">
           {timelineItems.map((item) => {
@@ -117,7 +117,7 @@ export default function TimelinePage() {
                 </div>
 
                 {/* Timeline Content Card */}
-                <div className="flex-1 glass-card glass-card-hover rounded-2xl p-5 border border-rose-500/20 space-y-2">
+                <div className="flex-1 soft-card soft-card-hover rounded-2xl p-5 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-rose-300 uppercase tracking-wider">
                       {formatDate(item.date)}

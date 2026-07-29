@@ -9,10 +9,10 @@ export function cn(...inputs: ClassValue[]) {
 
 export const MOOD_OPTIONS: MoodOption[] = [
   { id: 'happy', emoji: '😊', label: 'Happy', color: 'text-amber-500', bgColor: 'bg-amber-500/10 border-amber-500/30' },
-  { id: 'loved', emoji: '❤️', label: 'Loved', color: 'text-rose-500', bgColor: 'bg-rose-500/10 border-rose-500/30' },
+  { id: 'loved', emoji: '❤️', label: 'Loved', color: 'text-rose-500', bgColor: 'bg-rose-500/10 border-border' },
   { id: 'sad', emoji: '😔', label: 'Sad', color: 'text-blue-400', bgColor: 'bg-blue-400/10 border-blue-400/30' },
   { id: 'tired', emoji: '😴', label: 'Tired', color: 'text-purple-400', bgColor: 'bg-purple-400/10 border-purple-400/30' },
-  { id: 'missing_you', emoji: '😭', label: 'Missing You', color: 'text-pink-500', bgColor: 'bg-pink-500/10 border-pink-500/30' },
+  { id: 'missing_you', emoji: '😭', label: 'Missing You', color: 'text-pink-500', bgColor: 'bg-pink-500/10 border-border' },
 ];
 
 export function getMoodDetails(mood: MoodType) {

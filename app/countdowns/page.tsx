@@ -43,11 +43,11 @@ export default function CountdownsPage() {
       case 'visit':
         return { icon: Plane, label: 'Airport Visit', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' };
       case 'anniversary':
-        return { icon: Heart, label: 'Anniversary', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/30' };
+        return { icon: Heart, label: 'Anniversary', color: 'text-rose-400', bg: 'bg-rose-500/10 border-border' };
       case 'birthday':
-        return { icon: Cake, label: 'Birthday', color: 'text-pink-400', bg: 'bg-pink-500/10 border-pink-500/30' };
+        return { icon: Cake, label: 'Birthday', color: 'text-pink-400', bg: 'bg-pink-500/10 border-border' };
       case 'graduation':
-        return { icon: GraduationCap, label: 'Graduation', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' };
+        return { icon: GraduationCap, label: 'Graduation', color: 'text-purple-400', bg: 'bg-purple-500/10 border-border' };
       default:
         return { icon: Calendar, label: 'Special Date', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' };
     }
@@ -70,7 +70,7 @@ export default function CountdownsPage() {
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105"
+          className="px-5 py-2.5 rounded-xl hover:hover:text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105"
         >
           <Plus className="w-4 h-4" />
           <span>New Countdown</span>
@@ -87,7 +87,7 @@ export default function CountdownsPage() {
           return (
             <div
               key={cd.id}
-              className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 flex flex-col justify-between space-y-4 relative overflow-hidden"
+              className="soft-card soft-card-hover rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4 relative overflow-hidden"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -136,7 +136,7 @@ export default function CountdownsPage() {
       {/* Add Countdown Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-rose-500/30 shadow-2xl relative space-y-4">
+          <div className="soft-card w-full max-w-md rounded-2xl p-6 border border-border relative space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-rose-400" />

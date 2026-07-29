@@ -26,7 +26,7 @@ export function MoodSection() {
 
   return (
     <>
-      <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 flex flex-col justify-between space-y-4">
+      <div className="soft-card soft-card-hover rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-white flex items-center space-x-2">
             <Smile className="w-4 h-4 text-amber-400" />
@@ -77,7 +77,7 @@ export function MoodSection() {
       {/* Mood Modal */}
       {isMoodModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-rose-500/30 shadow-2xl relative">
+          <div className="soft-card w-full max-w-md rounded-2xl p-6 border border-border relative">
             <h3 className="text-xl font-bold text-gradient text-center mb-1">Select your mood</h3>
             <p className="text-xs text-zinc-400 text-center mb-6">
               Partner {partner?.name.split(' ')[0]} will see your updated mood immediately.

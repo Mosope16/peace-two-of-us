@@ -91,7 +91,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 logoutUser();
                 router.replace('/login');
               }}
-              className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/20 text-xs font-semibold transition-colors"
+              className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-border text-xs font-semibold transition-colors"
             >
               Sign Out
             </button>
@@ -111,7 +111,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated && !isPublic) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-2">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-border flex items-center justify-center text-rose-400 mb-2">
           <Lock className="w-8 h-8 animate-pulse" />
         </div>
         <h2 className="text-2xl font-bold text-white">Private Space Locked 🔒</h2>

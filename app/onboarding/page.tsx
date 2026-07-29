@@ -63,7 +63,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-zinc-950">
       <div className="w-full max-w-md space-y-8 text-center">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30">
+          <div className="w-16 h-16 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-border">
             <Heart className="w-8 h-8 text-rose-500" />
           </div>
         </div>

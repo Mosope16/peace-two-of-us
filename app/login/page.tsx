@@ -79,7 +79,7 @@ export default function LoginPage() {
   if (isSignedIn) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2">
+        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-border flex items-center justify-center text-emerald-400 mb-2">
           <CheckCircle2 className="w-8 h-8 animate-pulse" />
         </div>
         <h2 className="text-xl font-bold text-white">Welcome back!</h2>
@@ -90,11 +90,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 glass-card p-8 sm:p-10 rounded-3xl border border-rose-500/30 shadow-2xl relative overflow-hidden bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-rose-950/20">
+      <div className="max-w-md w-full space-y-8 soft-card p-8 sm:p-10 rounded-3xl border border-border relative overflow-hidden to-rose-950/20">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 shadow-lg shadow-rose-500/30 text-white mb-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl shadow-lg shadow-rose-500/30 text-white mb-2">
             <Heart className="w-8 h-8 fill-white animate-heartbeat" />
           </div>
 
@@ -105,13 +105,13 @@ export default function LoginPage() {
         </div>
 
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-border text-rose-400 text-xs font-medium">
             {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium flex items-center space-x-2">
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-border text-emerald-300 text-xs font-medium flex items-center space-x-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>{successMsg}</span>
           </div>
@@ -121,7 +121,7 @@ export default function LoginPage() {
           type="button"
           onClick={handleGoogleAuth}
           disabled={isLoading}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.02] disabled:opacity-50"
+          className="w-full py-3.5 rounded-xl hover:hover:text-white font-bold text-xs shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.02] disabled:opacity-50"
         >
           {isLoading ? (
             <span className="flex items-center space-x-2">

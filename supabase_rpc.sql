@@ -5,28 +5,28 @@ ALTER TABLE couples ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ NULL;
 ALTER TABLE couples ADD COLUMN IF NOT EXISTS archive_reason TEXT NULL;
 
 -- 2. Create the Transactional RPC for joining a couple
-CREATE OR REPLACE FUNCTION join_couple(p_invite_code TEXT, p_user_id TEXT)
+CREATE OR REPLACE FUNCTION join_couple(p_invite_code TEXT, p_user_id UUID)
 RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER -- Runs with elevated privileges
 AS $$
 DECLARE
-    target_couple_id TEXT;
-    target_partner_one TEXT;
-    target_partner_two TEXT;
+    target_couple_id UUID;
+    target_partner_one UUID;
+    target_partner_two UUID;
     target_status TEXT;
     target_is_archived BOOLEAN;
-    user_existing_couple_id TEXT;
+    user_existing_couple_id UUID;
     user_existing_status TEXT;
 BEGIN
-    -- Standardize invite code format
-    p_invite_code := UPPER(TRIM(p_invite_code));
+    -- Standardize invite code format (remove hyphens and uppercase)
+    p_invite_code := REPLACE(UPPER(TRIM(p_invite_code)), '-', '');
 
     -- 1. Fetch the target couple
     SELECT id, partner_one, partner_two, status, is_archived
     INTO target_couple_id, target_partner_one, target_partner_two, target_status, target_is_archived
     FROM couples
-    WHERE invite_code = p_invite_code;
+    WHERE REPLACE(invite_code, '-', '') = p_invite_code;
 
     IF NOT FOUND THEN
         RETURN json_build_object('success', false, 'error', 'Invite code not found.');

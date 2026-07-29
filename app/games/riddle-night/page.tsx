@@ -29,15 +29,15 @@ export default function RiddleNightPage() {
           <span>Back to Games Hub</span>
         </Link>
 
-        <div className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full font-medium">
+        <div className="text-xs text-emerald-400 bg-emerald-500/10 border border-border px-3 py-1 rounded-full font-medium">
           Playing as: <span className="font-bold">{currentUser.name}</span>
         </div>
       </div>
 
       {/* Header Banner */}
-      <div className="glass-card rounded-2xl p-6 sm:p-8 border border-emerald-500/30 space-y-3 bg-gradient-to-r from-emerald-950/40 via-zinc-900 to-teal-950/40">
+      <div className="soft-card rounded-2xl p-6 sm:p-8 border border-border space-y-3 to-teal-950/40">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-300">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-border flex items-center justify-center text-emerald-300">
             <HelpCircle className="w-6 h-6" />
           </div>
           <div>
@@ -55,17 +55,17 @@ export default function RiddleNightPage() {
           const isHintOpen = openHintId === riddle.id;
 
           return (
-            <div key={riddle.id} className="glass-card glass-card-hover rounded-2xl p-6 border border-emerald-500/20 space-y-4">
+            <div key={riddle.id} className="soft-card soft-card-hover rounded-2xl p-6 border border-border space-y-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-border">
                     Riddle #{idx + 1} • {riddle.category}
                   </span>
                   <h2 className="text-lg font-bold text-white mt-1">{riddle.title}</h2>
                 </div>
 
                 {isSolved && (
-                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center space-x-1">
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-border text-xs font-bold flex items-center space-x-1">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     <span>Solved</span>
                   </span>
@@ -89,7 +89,7 @@ export default function RiddleNightPage() {
 
               {/* Solution Answer Box */}
               {isSolved && (
-                <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/30 text-xs text-emerald-300 space-y-1 animate-in fade-in duration-200">
+                <div className="bg-emerald-500/10 p-4 rounded-xl border border-border text-xs text-emerald-300 space-y-1 animate-in fade-in duration-200">
                   <div className="flex items-center space-x-1.5 font-bold text-emerald-400">
                     <Key className="w-4 h-4" />
                     <span>Official Answer:</span>

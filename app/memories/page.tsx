@@ -73,7 +73,7 @@ export default function MemoriesPage() {
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105 disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl hover:hover:text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105 disabled:opacity-50"
           disabled={addMemory.isPending}
         >
           <Plus className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default function MemoriesPage() {
           <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
         </div>
       ) : filteredMemories.length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 text-center space-y-3">
+        <div className="soft-card rounded-2xl p-12 text-center space-y-3">
           <ImageIcon className="w-12 h-12 text-zinc-600 mx-auto" />
           <h3 className="text-base font-bold text-white">No memories found</h3>
           <p className="text-xs text-zinc-400">Start by capturing your first memory together!</p>
@@ -115,7 +115,7 @@ export default function MemoriesPage() {
               <div
                 key={mem.id}
                 onClick={() => setSelectedMemory(mem)}
-                className={`glass-card glass-card-hover rounded-2xl overflow-hidden cursor-pointer group border border-rose-500/20 flex flex-col ${isOptimistic ? 'opacity-50' : ''}`}
+                className={`soft-card soft-card-hover rounded-2xl overflow-hidden cursor-pointer group border border-border flex flex-col ${isOptimistic ? 'opacity-50' : ''}`}
               >
                 <div className="relative aspect-video overflow-hidden bg-zinc-900">
                   <img
@@ -165,7 +165,7 @@ export default function MemoriesPage() {
       {/* Add Memory Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="glass-card w-full max-w-lg rounded-2xl p-6 border border-rose-500/30 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="soft-card w-full max-w-lg rounded-2xl p-6 border border-border relative space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-rose-400" />
@@ -227,9 +227,7 @@ export default function MemoriesPage() {
                       key={idx}
                       type="button"
                       onClick={() => setImageUrl(img)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        imageUrl === img ? 'border-rose-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
-                      }`}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${ imageUrl === img ? 'border-rose-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100' }`}
                     >
                       <img src={img} className="w-full h-full object-cover" />
                     </button>
@@ -261,7 +259,7 @@ export default function MemoriesPage() {
       {/* Lightbox Detail Modal */}
       {selectedMemory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="glass-card w-full max-w-2xl rounded-3xl overflow-hidden border border-rose-500/30 shadow-2xl relative space-y-4">
+          <div className="soft-card w-full max-w-2xl rounded-3xl overflow-hidden border border-border relative space-y-4">
             <div className="relative aspect-video bg-black">
               <img src={selectedMemory.image_url} alt={selectedMemory.title} className="w-full h-full object-cover" />
               <button

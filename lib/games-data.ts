@@ -24,7 +24,7 @@ export const QUIZ_CATEGORIES: QuizCategoryInfo[] = [
     emoji: '🎬',
     description: 'Movies, music taste, viral trends & celebrity crushes',
     color: 'text-purple-400',
-    badgeBg: 'bg-purple-500/10 border-purple-500/30',
+    badgeBg: 'bg-purple-500/10 border-border',
   },
   {
     id: 'most_likely_to',
@@ -40,7 +40,7 @@ export const QUIZ_CATEGORIES: QuizCategoryInfo[] = [
     emoji: '🥰',
     description: 'Sweet moments, cuddle styles & romantic gestures',
     color: 'text-rose-400',
-    badgeBg: 'bg-rose-500/10 border-rose-500/30',
+    badgeBg: 'bg-rose-500/10 border-border',
   },
   {
     id: 'after_dark',
@@ -82,7 +82,7 @@ export const QUIZ_CATEGORIES: QuizCategoryInfo[] = [
     emoji: '📸',
     description: 'First impressions, early texts & unforgettable moments',
     color: 'text-pink-400',
-    badgeBg: 'bg-pink-500/10 border-pink-500/30',
+    badgeBg: 'bg-pink-500/10 border-border',
   },
   {
     id: 'silly_random',
@@ -98,7 +98,7 @@ export const QUIZ_CATEGORIES: QuizCategoryInfo[] = [
     emoji: '🌍',
     description: 'Bucket list trips, thrill seeking & dream destinations',
     color: 'text-emerald-400',
-    badgeBg: 'bg-emerald-500/10 border-emerald-500/30',
+    badgeBg: 'bg-emerald-500/10 border-border',
   },
   {
     id: 'red_flags_icks',

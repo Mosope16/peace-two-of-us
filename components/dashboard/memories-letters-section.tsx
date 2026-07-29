@@ -28,7 +28,7 @@ export function MemoriesLettersSection() {
     <>
       {/* Latest Memory Preview Card */}
       {latestMemory && (
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 space-y-4">
+        <div className="soft-card soft-card-hover rounded-2xl p-6 border border-border space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-white flex items-center space-x-2">
               <ImageIcon className="w-5 h-5 text-rose-400" />
@@ -46,7 +46,7 @@ export function MemoriesLettersSection() {
               alt={latestMemory.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 flex flex-col justify-end">
+            <div className="absolute inset-0 from-black/90 via-black/40 to-transparent p-4 flex flex-col justify-end">
               <span className="text-[10px] font-semibold text-rose-300 uppercase tracking-wider mb-1">
                 {formatDate(latestMemory.date)}
               </span>
@@ -59,7 +59,7 @@ export function MemoriesLettersSection() {
 
       {/* Love Letter Notice Card */}
       {latestLetter && (
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 flex flex-col justify-between space-y-4">
+        <div className="soft-card soft-card-hover rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-white flex items-center space-x-2">
               <Mail className="w-5 h-5 text-pink-400" />
@@ -71,7 +71,7 @@ export function MemoriesLettersSection() {
             </Link>
           </div>
 
-          <div className="envelope-bg rounded-xl p-5 border border-pink-500/30 space-y-3 relative overflow-hidden">
+          <div className="envelope-bg rounded-xl p-5 border border-border space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-pink-300">{latestLetter.title}</span>
               {isLocked ? (
@@ -80,7 +80,7 @@ export function MemoriesLettersSection() {
                   <span>Sealed</span>
                 </span>
               ) : (
-                <span className="flex items-center space-x-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="flex items-center space-x-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-border">
                   <Unlock className="w-3 h-3" />
                   <span>Unlocked</span>
                 </span>
@@ -103,7 +103,7 @@ export function MemoriesLettersSection() {
             <div className="flex justify-end pt-1">
               <Link
                 href="/letters"
-                className="px-4 py-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/40 text-pink-300 text-xs font-bold transition-all"
+                className="px-4 py-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-border text-pink-300 text-xs font-bold transition-all"
               >
                 {isLocked ? 'View Timer' : 'Read Full Letter'}
               </Link>

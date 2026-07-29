@@ -28,7 +28,7 @@ export function CountdownsSection() {
     <>
       {/* Next Visit Countdown Card */}
       {nextVisitCountdown && visitDays && (
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 flex flex-col justify-between space-y-4">
+        <div className="soft-card soft-card-hover rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
@@ -65,15 +65,15 @@ export function CountdownsSection() {
 
       {/* Next Anniversary Countdown Card */}
       {nextAnniversaryCountdown && annivDays && (
-        <div className="glass-card glass-card-hover rounded-2xl p-6 border border-rose-500/20 flex flex-col justify-between space-y-4">
+        <div className="soft-card soft-card-hover rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+              <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-border flex items-center justify-center text-rose-400">
                 <Gift className="w-4 h-4" />
               </div>
               <h3 className="text-sm font-bold text-white">{nextAnniversaryCountdown.title}</h3>
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-border">
               {annivDays.days} Days Left
             </span>
           </div>

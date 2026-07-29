@@ -10,7 +10,7 @@ export default function LandingPage() {
     <div className="space-y-16 py-8">
       {/* Hero Section */}
       <section className="text-center space-y-6 max-w-3xl mx-auto pt-8">
-        <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold">
+        <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-border text-rose-300 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5 text-rose-400" />
           <span>Designed exclusively for 2 people in love</span>
         </div>
@@ -27,7 +27,7 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link
             href="/dashboard"
-            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-xl hover:hover:text-white font-bold text-sm shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
           >
             <span>Enter Couple Space</span>
             <ArrowRight className="w-4 h-4" />
@@ -37,8 +37,8 @@ export default function LandingPage() {
 
       {/* Feature Highlights Grid */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pt-6">
-        <div className="glass-card glass-card-hover p-6 rounded-2xl space-y-3">
-          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+        <div className="soft-card soft-card-hover p-6 rounded-2xl space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-border flex items-center justify-center text-rose-400">
             <ImageIcon className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-bold text-white">Memories Album</h3>
@@ -47,8 +47,8 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="glass-card glass-card-hover p-6 rounded-2xl space-y-3">
-          <div className="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400">
+        <div className="soft-card soft-card-hover p-6 rounded-2xl space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-pink-500/10 border border-border flex items-center justify-center text-pink-400">
             <Mail className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-bold text-white">Time-Locked Letters</h3>
@@ -57,8 +57,8 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="glass-card glass-card-hover p-6 rounded-2xl space-y-3">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+        <div className="soft-card soft-card-hover p-6 rounded-2xl space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-border flex items-center justify-center text-purple-400">
             <Calendar className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-bold text-white">Visit & Anniversary Tickers</h3>
