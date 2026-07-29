@@ -4,13 +4,21 @@ import { User, Couple, Memory, LoveLetter, MoodLog, BucketItem, Countdown } from
 // Helper to generate a random 8-character Room ID (e.g., A8XK-91PQ)
 export function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let part1 = '';
-  let part2 = '';
-  for (let i = 0; i < 4; i++) {
-    part1 += chars.charAt(Math.floor(Math.random() * chars.length));
-    part2 += chars.charAt(Math.floor(Math.random() * chars.length));
+  const array = new Uint8Array(8);
+  if (typeof window !== 'undefined' && window.crypto) {
+    window.crypto.getRandomValues(array);
+  } else {
+    // Fallback for node environments without global crypto
+    const crypto = require('crypto');
+    crypto.randomFillSync(array);
   }
-  return `${part1}-${part2}`;
+  
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    if (i === 4) result += '-';
+    result += chars[array[i] % chars.length];
+  }
+  return result;
 }
 
 // 1. Sign Up User & Create or Join Couple Room

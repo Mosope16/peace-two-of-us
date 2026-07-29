@@ -29,10 +29,10 @@ export function HeroSection() {
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-rose-500 border-2 border-zinc-950 flex items-center justify-center -ml-4 z-10 shadow-md">
               <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white animate-heartbeat" />
             </div>
-            {couple.is_connected && couple.partner_two ? (
+            {couple.status === 'connected' || (couple.is_connected && couple.partner_two) ? (
               <img
-                src={couple.partner_two.avatar}
-                alt={couple.partner_two.name}
+                src={couple.partner_two?.avatar || ''}
+                alt={couple.partner_two?.name || 'Partner'}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-4 ring-pink-500/40 shadow-lg -ml-4"
               />
             ) : (
@@ -53,21 +53,21 @@ export function HeroSection() {
             <div className="flex items-center space-x-2">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
                 {couple.partner_one.username || couple.partner_one.name.split(' ')[0]} 
-                {couple.is_connected && couple.partner_two 
-                  ? ` & ${couple.partner_two.username || couple.partner_two.name.split(' ')[0]}` 
+                {couple.status === 'connected' || (couple.is_connected && couple.partner_two) 
+                  ? ` & ${couple.partner_two?.username || couple.partner_two?.name.split(' ')[0] || 'Partner'}` 
                   : ' (Waiting for Partner)'}
               </h1>
-              {couple.is_connected && (
+              {(couple.status === 'connected' || couple.is_connected) && (
                 <button onClick={triggerLoveConfetti} title="Celebrate Love!" className="text-xl hover:scale-125 transition-transform">
                   🎉
                 </button>
               )}
             </div>
             
-            {couple.is_connected && couple.partner_two ? (
+            {couple.status === 'connected' || (couple.is_connected && couple.partner_two) ? (
               <p className="text-xs sm:text-sm text-emerald-400 font-medium flex items-center space-x-1.5 mt-1">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>💚 Connected &bull; Invite Code: <span className="font-mono font-bold text-white bg-rose-500/20 px-1.5 py-0.5 rounded" suppressHydrationWarning>{couple.invite_code}</span></span>
+                <span>💚 Connected &bull; Space Code: <span className="font-mono font-bold text-white bg-rose-500/20 px-1.5 py-0.5 rounded" suppressHydrationWarning>{couple.invite_code}</span></span>
               </p>
             ) : (
               <p className="text-xs sm:text-sm text-amber-300 font-medium flex items-center space-x-1.5 mt-1">

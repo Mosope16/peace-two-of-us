@@ -140,34 +140,28 @@ export async function POST() {
 
   let coupleRow = (existingCouples?.[0] || null) as CoupleRow | null;
 
-  if (!coupleRow) {
-    const { data: createdCouple, error: coupleCreateError } = await supabase
-      .from('couples')
-      .insert({
-        partner_one: appUser.id,
-        invite_code: generateInviteCode(),
-        relationship_start_date: new Date().toISOString(),
-      })
-      .select('*, partner_one_data:users!partner_one(*), partner_two_data:users!partner_two(*)')
-      .single();
+  if (coupleRow && coupleRow.id !== appUser.couple_id) {
+    const { error: linkUserError } = await supabase
+      .from('users')
+      .update({ couple_id: coupleRow.id })
+      .eq('id', appUser.id);
 
-    if (coupleCreateError) {
-      return syncError('Could not create couple profile.', coupleCreateError);
+    if (linkUserError) {
+      return syncError('Could not link user profile to couple.', linkUserError);
     }
-
-    coupleRow = createdCouple as CoupleRow;
+    appUser.couple_id = coupleRow.id;
   }
 
-  const { error: linkUserError } = await supabase
-    .from('users')
-    .update({ couple_id: coupleRow.id })
-    .eq('id', appUser.id);
+  const currentUserWithCouple = { ...appUser, couple_id: coupleRow?.id };
 
-  if (linkUserError) {
-    return syncError('Could not link user profile to couple.', linkUserError);
+  if (!coupleRow) {
+    return NextResponse.json({
+      user: currentUserWithCouple,
+      partner: null,
+      couple: null,
+    });
   }
 
-  const currentUserWithCouple = { ...appUser, couple_id: coupleRow.id };
   const partnerRow = coupleRow.partner_one === appUser.id ? coupleRow.partner_two_data : coupleRow.partner_one_data;
   const partner = partnerRow ? toUser(partnerRow) : null;
 

@@ -25,6 +25,10 @@ export interface Couple {
   relationship_start_date: string;
   invite_code: string;
   is_connected: boolean;
+  status?: 'waiting' | 'connected' | 'archived';
+  is_archived?: boolean;
+  archived_at?: string;
+  archive_reason?: string;
 }
 
 export interface Memory {

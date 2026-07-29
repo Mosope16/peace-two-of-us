@@ -14,7 +14,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
-  const { isAuthenticated, setAuthenticatedUser, logoutUser } = useLDRStore();
+  const { isAuthenticated, currentUser, setAuthenticatedUser, logoutUser } = useLDRStore();
   const [syncError, setSyncError] = useState('');
 
   useEffect(() => {
@@ -53,6 +53,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   const isPublic = PUBLIC_ROUTES.includes(pathname);
+  const isOnboarding = pathname === '/onboarding';
+
+  // Force onboarding if logged in but no couple
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      if (!currentUser.couple_id && !isOnboarding) {
+        router.replace('/onboarding');
+      } else if (currentUser.couple_id && isOnboarding) {
+        router.replace('/dashboard');
+      }
+    }
+  }, [isAuthenticated, currentUser, isOnboarding, router]);
 
   if (isSignedIn && !isAuthenticated && !isPublic) {
     if (syncError) {
