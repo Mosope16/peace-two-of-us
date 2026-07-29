@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { Gamepad2, ArrowRight } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
-import { subscribeToCoupleRealtime } from '@/lib/auth';
+import { subscribeToCoupleRealtime } from '@/lib/supabase';
 import { triggerLoveConfetti } from '@/lib/utils';
 import { HeroSection } from '@/components/dashboard/hero-section';
 import { CountdownsSection } from '@/components/dashboard/countdowns-section';

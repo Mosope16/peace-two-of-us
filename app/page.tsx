@@ -2,39 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Heart, Lock, Sparkles, ArrowRight, ShieldCheck, Calendar, Mail, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
-import { useLDRStore } from '@/lib/store';
-import { linkPartnerWithInviteCode } from '@/lib/auth';
+import { Sparkles, ArrowRight, Calendar, Mail, Image as ImageIcon } from 'lucide-react';
 
 export default function LandingPage() {
-  const router = useRouter();
-  const { couple, pairWithCode } = useLDRStore();
-  const [inviteCodeInput, setInviteCodeInput] = useState('');
-  const [pairError, setPairError] = useState('');
-  const [pairSuccess, setPairSuccess] = useState(false);
-
-  const handlePairSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteCodeInput.trim()) return;
-
-    try {
-      await linkPartnerWithInviteCode(inviteCodeInput, 'current-user');
-      const success = pairWithCode(inviteCodeInput);
-
-      if (success) {
-        setPairSuccess(true);
-        setPairError('');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
-      } else {
-        setPairError("Invalid invite code. Please enter your partner's 6-character code.");
-      }
-    } catch (err) {
-      setPairError("Could not connect with invite code. Please check the code and try again.");
-    }
-  };
 
   return (
     <div className="space-y-16 py-8">
@@ -62,66 +32,6 @@ export default function LandingPage() {
             <span>Enter Couple Space</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
-
-          <a
-            href="#pairing"
-            className="w-full sm:w-auto px-6 py-3.5 rounded-xl glass-card text-zinc-200 hover:text-white font-semibold text-sm flex items-center justify-center space-x-2 transition-all hover:bg-white/5"
-          >
-            <Lock className="w-4 h-4 text-rose-400" />
-            <span>Pair Accounts with Code</span>
-          </a>
-        </div>
-      </section>
-
-      {/* Partner Invite Code Pairing Box */}
-      <section id="pairing" className="max-w-xl mx-auto glass-card rounded-2xl p-6 sm:p-8 border border-rose-500/30 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <Heart className="w-32 h-32 text-rose-500 fill-rose-500" />
-        </div>
-
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-rose-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Connect Accounts into One Couple Profile</h2>
-              <p className="text-xs text-zinc-400">Enter your partner's unique 6-character invitation code</p>
-            </div>
-          </div>
-
-          <form onSubmit={handlePairSubmit} className="space-y-3 pt-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="e.g. LDR-892"
-                value={inviteCodeInput}
-                onChange={(e) => setInviteCodeInput(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl bg-zinc-900/90 border border-zinc-700 focus:border-rose-500 text-white font-mono text-center tracking-widest text-lg focus:outline-none uppercase"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm shadow-md transition-all"
-              >
-                Connect
-              </button>
-            </div>
-
-            {pairError && <p className="text-xs text-rose-400 font-medium">{pairError}</p>}
-            {pairSuccess && (
-              <div className="flex items-center space-x-2 text-emerald-400 text-xs font-semibold">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Connected successfully! Redirecting to dashboard...</span>
-              </div>
-            )}
-          </form>
-
-          <div className="pt-2 border-t border-zinc-800 text-xs text-zinc-400 flex items-center justify-between">
-            <span>Current Demo Couple Code:</span>
-            <span className="font-mono text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-bold">
-              {couple.invite_code}
-            </span>
-          </div>
         </div>
       </section>
 
