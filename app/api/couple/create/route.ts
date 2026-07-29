@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 import { generateInviteCode } from '@/lib/auth';
-import { stableUuidFromClerkId } from '../sync-user/route'; // We'll extract this or duplicate for now
+import { stableUuidFromClerkId } from '@/lib/server/auth-utils';
 
 export async function POST() {
   const clerkUser = await currentUser();
@@ -16,16 +16,7 @@ export async function POST() {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 
-  // We need the stable UUID we use in sync-user
-  const { createHash } = await import('node:crypto');
-  const hash = createHash('sha256').update(`clerk:${clerkUser.id}`).digest('hex');
-  const userId = [
-    hash.slice(0, 8),
-    hash.slice(8, 12),
-    `5${hash.slice(13, 16)}`,
-    ((parseInt(hash.slice(16, 18), 16) & 0x3f) | 0x80).toString(16).padStart(2, '0') + hash.slice(18, 20),
-    hash.slice(20, 32),
-  ].join('-');
+  const userId = stableUuidFromClerkId(clerkUser.id);
 
   // Check if they already have a couple
   const { data: userRow } = await supabase.from('users').select('couple_id').eq('id', userId).single();
