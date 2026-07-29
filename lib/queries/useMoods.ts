@@ -5,6 +5,7 @@ import { MoodLog } from '@/types';
 
 export function useMoods() {
   const coupleId = useLDRStore((state) => state.couple?.id);
+  const isAuthenticated = useLDRStore((state) => state.isAuthenticated);
 
   return useQuery({
     queryKey: ['moods', coupleId],
@@ -23,7 +24,7 @@ export function useMoods() {
       if (error) throw error;
       return data as MoodLog[];
     },
-    enabled: !!coupleId,
+    enabled: isAuthenticated && !!coupleId,
   });
 }
 

@@ -3,36 +3,38 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Heart, 
-  Image as ImageIcon, 
-  Mail, 
-  Clock, 
-  CheckSquare, 
-  Calendar, 
-  Settings, 
-  Smile, 
-  Users,
+import {
+  Heart,
+  Image as ImageIcon,
+  Mail,
+  Clock,
+  CheckSquare,
+  Calendar,
+  Settings,
+  Smile,
   ChevronDown,
-  Sparkles,
-  Gamepad2
+  Gamepad2,
+  LogIn,
 } from 'lucide-react';
+import { useAuth, useClerk } from '@clerk/nextjs';
 import { useLDRStore } from '@/lib/store';
 import { getMoodDetails, MOOD_OPTIONS } from '@/lib/utils';
-import { MoodType } from '@/types';
 import { useMoods, useSetMood } from '@/lib/queries/useMoods';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { currentUser, partner, couple, logoutUser } = useLDRStore();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { isAuthenticated, currentUser, partner, couple, logoutUser } = useLDRStore();
+  const { signOut } = useClerk();
   const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const { data: moodLogs = [] } = useMoods();
   const setMoodMutation = useSetMood();
 
-  const activeMoodLog = moodLogs.find(m => m.user_id === currentUser.id);
-  const partnerMoodLog = partner && couple.is_connected ? moodLogs.find(m => m.user_id === partner.id) : null;
+  const canShowPrivateNav = isLoaded && isSignedIn && isAuthenticated;
+  const activeMoodLog = canShowPrivateNav ? moodLogs.find((m) => m.user_id === currentUser.id) : null;
+  const partnerMoodLog = canShowPrivateNav && partner && couple.is_connected ? moodLogs.find((m) => m.user_id === partner.id) : null;
   const partnerMoodDetails = partnerMoodLog ? getMoodDetails(partnerMoodLog.mood) : null;
 
   const navLinks = [
@@ -46,13 +48,17 @@ export default function Navbar() {
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
+  const handleSignOut = async () => {
+    logoutUser();
+    setIsUserDropdownOpen(false);
+    await signOut({ redirectUrl: '/login' });
+  };
+
   return (
     <>
       <header className="sticky top-0 z-40 glass-nav backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            
-            {/* Brand Logo */}
             <Link href="/dashboard" className="flex items-center space-x-3 group">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:scale-105 transition-transform">
                 <Heart className="w-6 h-6 text-white fill-white animate-heartbeat" />
@@ -65,8 +71,7 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+            {canShowPrivateNav && <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -85,21 +90,27 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-            </nav>
+            </nav>}
 
-            {/* Right Action Bar: Partner Mood + User Switcher */}
             <div className="flex items-center space-x-3">
-              
-              {/* Partner's Latest Mood Pill */}
+              {!canShowPrivateNav ? (
+                <Link
+                  href="/login"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign in</span>
+                </Link>
+              ) : (
+                <>
               {partnerMoodDetails && (
                 <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-700/50 text-xs shadow-inner">
-                  <span className="text-zinc-400 font-medium">{partner?.name.split(' ')[0]}'s Mood:</span>
+                  <span className="text-zinc-400 font-medium">{partner?.name.split(' ')[0]}&apos;s Mood:</span>
                   <span className="text-sm">{partnerMoodDetails.emoji}</span>
                   <span className={`font-semibold ${partnerMoodDetails.color}`}>{partnerMoodDetails.label}</span>
                 </div>
               )}
 
-              {/* Mood Check-In Trigger */}
               <button
                 onClick={() => setIsMoodModalOpen(true)}
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-500/30 text-rose-300 hover:bg-rose-500/30 text-xs font-semibold transition-all shadow-sm"
@@ -109,7 +120,6 @@ export default function Navbar() {
                 {activeMoodLog && <span className="text-sm">{getMoodDetails(activeMoodLog.mood).emoji}</span>}
               </button>
 
-              {/* Dual-View Demo Partner Switcher */}
               <div className="relative">
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -150,24 +160,21 @@ export default function Navbar() {
                     <div className="my-1 border-t border-zinc-800/80" />
 
                     <button
-                      onClick={() => {
-                        logoutUser();
-                        setIsUserDropdownOpen(false);
-                      }}
+                      onClick={handleSignOut}
                       className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors"
                     >
-                      <span>🚪 Reset / Sign Out</span>
+                      <span>🚪 Sign Out</span>
                     </button>
                   </div>
                 )}
               </div>
-
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Mobile Navigation Row */}
-        <div className="md:hidden flex items-center space-x-1 border-t border-rose-500/10 px-3 py-2 bg-zinc-950/90 text-xs overflow-x-auto no-scrollbar">
+        {canShowPrivateNav && <div className="md:hidden flex items-center space-x-1 border-t border-rose-500/10 px-3 py-2 bg-zinc-950/90 text-xs overflow-x-auto no-scrollbar">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -184,10 +191,9 @@ export default function Navbar() {
               </Link>
             );
           })}
-        </div>
+        </div>}
       </header>
 
-      {/* Mood Check-In Modal */}
       {isMoodModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
           <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-rose-500/30 shadow-2xl relative animate-in fade-in zoom-in duration-200">

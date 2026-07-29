@@ -274,8 +274,11 @@ DROP POLICY IF EXISTS "Notifications update access" ON public.notifications;
 CREATE POLICY "Notifications update access" ON public.notifications FOR UPDATE USING (recipient_id = auth.uid());
 
 -- GAMES DATA: Publicly readable
+DROP POLICY IF EXISTS "Games are viewable by everyone" ON public.games;
 CREATE POLICY "Games are viewable by everyone" ON public.games FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON public.game_categories;
 CREATE POLICY "Categories are viewable by everyone" ON public.game_categories FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Questions are viewable by everyone" ON public.questions;
 CREATE POLICY "Questions are viewable by everyone" ON public.questions FOR SELECT USING (true);
 
 -- GAME SESSIONS & ANSWERS: Couple-scoped access

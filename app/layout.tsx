@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import AuthGuard from "@/components/auth-guard";
@@ -22,20 +23,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="antialiased min-height-screen flex flex-col">
-        <QueryProvider>
-          <RealtimeProvider>
-            <Navbar />
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <AuthGuard>{children}</AuthGuard>
-            </main>
-            <footer className="py-6 border-t border-rose-500/10 text-center text-xs text-zinc-500 glass-nav">
-              <p>Made with ❤️ for Long Distance Couples &bull; TwoOfUs MVP</p>
-            </footer>
-          </RealtimeProvider>
-        </QueryProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className="dark">
+        <body className="antialiased min-height-screen flex flex-col">
+          <QueryProvider>
+            <RealtimeProvider>
+              <Navbar />
+              <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <AuthGuard>{children}</AuthGuard>
+              </main>
+              <footer className="py-6 border-t border-rose-500/10 text-center text-xs text-zinc-500 glass-nav">
+                <p>Made with ❤️ for Long Distance Couples &bull; TwoOfUs MVP</p>
+              </footer>
+            </RealtimeProvider>
+          </QueryProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -2,35 +2,66 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { useLDRStore } from '@/lib/store';
-import { Heart, Lock, Sparkles } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
+import { syncClerkUser } from '@/lib/clerk-sync';
 
-const PUBLIC_ROUTES = ['/login', '/'];
+const PUBLIC_ROUTES = ['/login', '/', '/sso-callback'];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated } = useLDRStore();
-  const [isMounted, setIsMounted] = useState(false);
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { isAuthenticated, setAuthenticatedUser, logoutUser } = useLDRStore();
+  const [syncError, setSyncError] = useState('');
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!isLoaded) return;
 
-  useEffect(() => {
-    if (isMounted) {
-      const isPublic = PUBLIC_ROUTES.includes(pathname);
-      if (!isAuthenticated && !isPublic) {
-        router.replace('/login');
-      }
+    const isPublic = PUBLIC_ROUTES.includes(pathname);
+
+    if (isSignedIn && user) {
+      let isCancelled = false;
+
+      syncClerkUser()
+        .then(({ user: appUser, partner, couple }) => {
+          if (isCancelled) return;
+          setSyncError('');
+          setAuthenticatedUser(appUser, partner, couple);
+        })
+        .catch((err: Error) => {
+          if (!isCancelled) {
+            setSyncError(err.message);
+          }
+        });
+
+      return () => {
+        isCancelled = true;
+      };
     }
-  }, [isAuthenticated, pathname, isMounted, router]);
 
-  if (!isMounted) {
+    if (!isPublic) {
+      logoutUser();
+      router.replace('/login');
+    }
+  }, [isLoaded, isSignedIn, pathname, router, setAuthenticatedUser, logoutUser, user]);
+
+  if (!isLoaded) {
     return null;
   }
 
   const isPublic = PUBLIC_ROUTES.includes(pathname);
+
+  if (isSignedIn && !isAuthenticated && !isPublic) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
+        <p className="text-xs text-zinc-400">{syncError || 'Preparing your private space...'}</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated && !isPublic) {
     return (
