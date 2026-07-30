@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useLDRStore } from '@/lib/store';
@@ -6,12 +7,13 @@ export type GameSession = {
   id: string;
   couple_id: string;
   game_type: string;
-  status: 'pending' | 'accepted' | 'subject_playing' | 'waiting_for_guesser' | 'guessing' | 'completed' | 'cancelled' | 'expired';
+  status: 'pending' | 'accepted' | 'subject_playing' | 'waiting_for_guesser' | 'guessing' | 'completed' | 'cancelled' | 'expired' | 'playing' | 'revealing';
   subject_user_id: string;
   guesser_user_id: string;
   subject_completed: boolean;
   guesser_completed: boolean;
   score: number;
+  current_question_index: number;
   created_at: string;
 };
 
@@ -167,10 +169,16 @@ export type SessionQuestion = {
   answerType: string;
   categoryName?: string;
   categoryEmoji?: string;
+  subjectUserId?: string;
+  guesserUserId?: string;
+  questionOrder?: number;
 };
 
 type SessionQuestionAssignmentRow = {
   question_id: string;
+  subject_user_id: string;
+  guesser_user_id: string;
+  question_order: number;
   questions: {
     id: string;
     question_text: string;
@@ -211,6 +219,9 @@ export function useSessionQuestions(sessionId: string | null) {
         .from('session_question_assignments')
         .select(`
           question_id,
+          subject_user_id,
+          guesser_user_id,
+          question_order,
           questions (
             id,
             question_text,
@@ -223,7 +234,7 @@ export function useSessionQuestions(sessionId: string | null) {
           )
         `)
         .eq('session_id', sessionId)
-        .order('assigned_at', { ascending: true });
+        .order('question_order', { ascending: true });
 
       if (error) throw error;
 
@@ -239,6 +250,9 @@ export function useSessionQuestions(sessionId: string | null) {
           answerType: question.answer_type,
           categoryName: question.game_categories?.name ?? undefined,
           categoryEmoji: question.game_categories?.emoji ?? undefined,
+          subjectUserId: assignment.subject_user_id,
+          guesserUserId: assignment.guesser_user_id,
+          questionOrder: assignment.question_order,
         }];
       }) as SessionQuestion[];
     },
@@ -260,7 +274,16 @@ export function useCreateGameRound() {
       
       if (gameError || !game) throw gameError || new Error('Game not found');
 
-      // 2. Fetch questions
+      // 2. Fetch session to get sender and receiver (subject and guesser)
+      const { data: session, error: sessionError } = await supabase
+        .from('game_sessions')
+        .select('subject_user_id, guesser_user_id')
+        .eq('id', sessionId)
+        .single();
+        
+      if (sessionError || !session) throw sessionError || new Error('Session not found');
+
+      // 3. Fetch questions
       let query = supabase.from('questions').select('id, question_text, options, answer_type').eq('game_id', game.id);
       if (categoryId) {
         query = query.eq('category_id', categoryId);
@@ -273,20 +296,45 @@ export function useCreateGameRound() {
         throw new Error('No questions found for this game');
       }
 
-      // 3. Shuffle and pick 5 questions
-      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 5);
+      // 3. Shuffle and pick 5 questions (can be any roundLength)
+      const roundLength = 5;
+      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, roundLength);
+
+      // Halfway role swap logic (Sender = Subject for first half, Receiver = Subject for second half)
+      const midpoint = Math.ceil(roundLength / 2);
 
       // 4. Insert assignments
-      const assignments = shuffled.map(q => ({
-        session_id: sessionId,
-        question_id: q.id
-      }));
+      const assignments = shuffled.map((q, index) => {
+        let subject_user_id = session.subject_user_id;
+        let guesser_user_id = session.guesser_user_id;
+
+        if (index >= midpoint) {
+          subject_user_id = session.guesser_user_id;
+          guesser_user_id = session.subject_user_id;
+        }
+
+        return {
+          session_id: sessionId,
+          question_id: q.id,
+          question_order: index,
+          subject_user_id,
+          guesser_user_id
+        };
+      });
 
       const { error: insertError } = await supabase
         .from('session_question_assignments')
         .insert(assignments);
         
       if (insertError) throw insertError;
+
+      // 5. Update session status to playing
+      const { error: updateError } = await supabase
+        .from('game_sessions')
+        .update({ status: 'playing' })
+        .eq('id', sessionId);
+        
+      if (updateError) throw updateError;
 
       return shuffled.map(q => ({
         id: q.id,
@@ -301,4 +349,75 @@ export function useCreateGameRound() {
       queryClient.invalidateQueries({ queryKey: ['session_questions', variables.sessionId] });
     }
   });
+}
+
+export function useSubmitGameAnswer() {
+  const queryClient = useQueryClient();
+  const coupleId = useLDRStore((state) => state.couple?.id);
+
+  return useMutation({
+    mutationFn: async ({ sessionId, questionId, questionText, answer, role }: { sessionId: string; questionId: string; questionText: string; answer: string; role: 'subject' | 'guesser' }) => {
+      const { data, error } = await supabase.rpc('submit_game_answer', {
+        p_session_id: sessionId,
+        p_question_id: questionId,
+        p_question_text: questionText,
+        p_answer: answer,
+        p_role: role
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['game_answers', variables.sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['game_sessions', coupleId] });
+    }
+  });
+}
+
+export function useAdvanceGameSession() {
+  const queryClient = useQueryClient();
+  const coupleId = useLDRStore((state) => state.couple?.id);
+
+  return useMutation({
+    mutationFn: async ({ sessionId, totalQuestions }: { sessionId: string; totalQuestions: number }) => {
+      const { data, error } = await supabase.rpc('advance_game_session', {
+        p_session_id: sessionId,
+        p_total_questions: totalQuestions
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['game_sessions', coupleId] });
+    }
+  });
+}
+export function useGameSessionSubscription(sessionId: string | null) {
+  const queryClient = useQueryClient();
+  const coupleId = useLDRStore((state) => state.couple?.id);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase.channel(`db-changes-${sessionId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['game_sessions', coupleId] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'game_answers', filter: `session_id=eq.${sessionId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['game_answers', sessionId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, queryClient, coupleId]);
 }
