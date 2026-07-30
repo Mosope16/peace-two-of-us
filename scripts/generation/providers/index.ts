@@ -6,6 +6,12 @@ export type ControlledTag =
   | 'romance' | 'communication' | 'dreams' | 'intimacy'
   | 'funny' | 'habits' | 'values' | 'hypothetical';
 
+export interface GenerationMetadata {
+  generator: string;
+  generated_at: string;
+  prompt_version: string;
+}
+
 export interface GeneratedQuestion {
   id: string; // e.g. know_me_long_distance_001
   category_id: string;
@@ -16,6 +22,7 @@ export interface GeneratedQuestion {
   difficulty: Difficulty;
   tags: ControlledTag[];
   approved: boolean;
+  metadata: GenerationMetadata;
 }
 
 export interface ProviderResponse {
@@ -29,6 +36,7 @@ export interface GenerationPromptOptions {
   categoryId: string;
   count: number;
   existingQuestions: string[]; // To avoid duplicates in the prompt context
+  dryRun?: boolean;
 }
 
 export interface LLMProvider {

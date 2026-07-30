@@ -9,11 +9,18 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async generateQuestions(options: GenerationPromptOptions): Promise<ProviderResponse> {
-    if (!this.apiKey) {
+    if (!this.apiKey && !options.dryRun) {
       throw new Error('GEMINI_API_KEY environment variable is missing.');
     }
 
     const prompt = this.buildPrompt(options);
+    const PROMPT_VERSION = "v1";
+
+    if (options.dryRun) {
+      console.log(`[Dry Run] Would generate ${options.count} questions for "${options.categoryName}"`);
+      console.log(`[Dry Run] Estimated prompt length: ${prompt.length} characters.`);
+      return { questions: [] };
+    }
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`, {
       method: 'POST',
@@ -51,20 +58,27 @@ export class GeminiProvider implements LLMProvider {
           throw new Error('Response did not contain a "questions" array');
       }
       
+      const generatedAt = new Date().toISOString();
+      
       // Map to ensure stable IDs and default approved status
       parsed.questions = parsed.questions.map((q: any, i: number) => ({
         ...q,
-        id: \`know_me_\${options.categorySlug.replace(/-/g, '_')}_\${Date.now()}_\${i}\`,
+        id: `know_me_${options.categorySlug.replace(/-/g, '_')}_${Date.now()}_${i}`,
         category_id: options.categoryId,
         category_slug: options.categorySlug,
         answer_type: 'multiple_choice',
         approved: false, // Default to false for human review
+        metadata: {
+          generator: this.name,
+          generated_at: generatedAt,
+          prompt_version: PROMPT_VERSION
+        }
       }));
 
       return parsed as ProviderResponse;
     } catch (e: any) {
       console.error("Failed to parse JSON from Gemini:", text);
-      throw new Error(\`JSON parse error: \${e.message}\`);
+      throw new Error(`JSON parse error: ${e.message}`);
     }
   }
 

@@ -28,7 +28,7 @@ async function ensureDirectory() {
   }
 }
 
-async function runGeneration(provider: LLMProvider, targetCategorySlug?: string) {
+async function runGeneration(provider: LLMProvider, targetCategorySlug?: string, dryRun: boolean = false) {
   await ensureDirectory();
 
   // Filter categories if a specific one is provided
@@ -87,7 +87,8 @@ async function runGeneration(provider: LLMProvider, targetCategorySlug?: string)
         categoryName: category.name,
         categoryDescription: category.description,
         count: batchSize,
-        existingQuestions: allExistingText
+        existingQuestions: allExistingText,
+        dryRun
       });
 
       if (response.questions && response.questions.length > 0) {
@@ -111,4 +112,6 @@ const provider = new GeminiProvider();
 
 // Optionally pass a specific category slug as argument (e.g. 'long-distance')
 const args = process.argv.slice(2);
-runGeneration(provider, args[0]);
+const dryRun = args.includes('--dry-run');
+const slugArg = args.find(a => !a.startsWith('--'));
+runGeneration(provider, slugArg, dryRun);

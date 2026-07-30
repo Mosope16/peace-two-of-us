@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { GeneratedQuestion } from './providers/index';
+import { knowMeCategories, knowMeQuestions } from '../seed/know-me';
 
 const GENERATED_DIR = path.join(process.cwd(), 'generated', 'know-me');
 const OUTPUT_FILE = path.join(process.cwd(), 'scripts', 'seed', 'generated-know-me.ts');
@@ -16,6 +17,17 @@ function compile() {
   let totalApproved = 0;
   let totalPending = 0;
 
+  // Track stats per category
+  const categoryStats: Record<string, { approved: number, seeded: number, name: string }> = {};
+  
+  for (const cat of knowMeCategories) {
+    categoryStats[cat.id] = {
+      name: cat.name,
+      seeded: knowMeQuestions.filter(q => q.category_id === cat.id).length,
+      approved: 0
+    };
+  }
+
   for (const file of files) {
     const filePath = path.join(GENERATED_DIR, file);
     const data: GeneratedQuestion[] = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
@@ -28,13 +40,39 @@ function compile() {
           answer_type: q.answer_type || 'multiple_choice',
           options: q.options,
           difficulty: q.difficulty,
-          tags: q.tags
+          tags: q.tags,
+          metadata: q.metadata
         });
         totalApproved++;
+        if (categoryStats[q.category_id]) {
+          categoryStats[q.category_id].approved++;
+        }
       } else {
         totalPending++;
       }
     }
+  }
+
+  console.log(\`\\n--- Know Me Library Statistics ---\\n\`);
+  let canCompile = true;
+  const TARGET = 50;
+
+  for (const [catId, stats] of Object.entries(categoryStats)) {
+    const total = stats.seeded + stats.approved;
+    console.log(\`\${stats.name}\`);
+    console.log(\`\${total} questions (\${stats.seeded} core + \${stats.approved} generated)\`);
+    
+    if (total >= TARGET) {
+      console.log(\`✅ \${total} / \${TARGET}\\n\`);
+    } else {
+      console.log(\`❌ \${total} / \${TARGET}\\n\`);
+      canCompile = false;
+    }
+  }
+
+  if (!canCompile) {
+    console.error(\`❌ Compile failed: Not all categories have reached the target of \${TARGET} questions.\`);
+    process.exit(1);
   }
 
   const fileContent = \`// AUTO-GENERATED FILE. DO NOT EDIT DIRECTLY.

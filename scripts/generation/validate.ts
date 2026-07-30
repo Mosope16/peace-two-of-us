@@ -93,6 +93,8 @@ function runValidation() {
   for (const file of files) {
     const filePath = path.join(GENERATED_DIR, file);
     const data: GeneratedQuestion[] = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    if (data.length === 0) continue;
+
     const categoryId = data[0]?.category_id;
     
     // Seed questions for this category
@@ -105,6 +107,11 @@ function runValidation() {
     let categoryValid = 0;
     const existingTextsForCategory = [...seedTexts];
 
+    // Linting stats
+    let startsWithWhat = 0;
+    const difficulties = { easy: 0, medium: 0, deep: 0 };
+    const openingPhrases: Record<string, number> = {};
+
     for (const q of data) {
       const errors = validateQuestion(q, existingTextsForCategory);
       if (errors.length > 0) {
@@ -112,14 +119,55 @@ function runValidation() {
         errors.forEach(e => console.log(\`   - \${e}\`));
         totalErrors++;
       } else {
-        // Only add to existing pool if valid, to check future generated ones against it
         existingTextsForCategory.push(q.question_text);
         categoryValid++;
         totalValid++;
+
+        // Track lint stats for valid questions
+        if (q.difficulty && difficulties[q.difficulty] !== undefined) {
+          difficulties[q.difficulty]++;
+        }
+        
+        const lowerQ = q.question_text.toLowerCase();
+        if (lowerQ.startsWith("what's") || lowerQ.startsWith("what is")) {
+          startsWithWhat++;
+        }
+
+        const firstTwoWords = lowerQ.split(' ').slice(0, 2).join(' ');
+        if (firstTwoWords) {
+          openingPhrases[firstTwoWords] = (openingPhrases[firstTwoWords] || 0) + 1;
+        }
       }
     }
     
     console.log(\`✅ \${categoryValid} / \${data.length} valid in \${file}\`);
+
+    // Lint Warnings
+    const lintWarnings: string[] = [];
+    if (startsWithWhat > (categoryValid * 0.4)) {
+      lintWarnings.push(\`Too many questions start with "What's/What is" (\${startsWithWhat}/\${categoryValid})\`);
+    }
+    
+    // Difficulty balance
+    const maxDiff = Math.max(...Object.values(difficulties));
+    const minDiff = Math.min(...Object.values(difficulties));
+    if (categoryValid > 15 && maxDiff > (minDiff * 3 + 5)) {
+       lintWarnings.push(\`Unbalanced difficulty distribution (Easy: \${difficulties.easy}, Medium: \${difficulties.medium}, Deep: \${difficulties.deep})\`);
+    }
+
+    // Repeated phrases
+    const repeatedPhrases = Object.entries(openingPhrases)
+      .filter(([phrase, count]) => count > (categoryValid * 0.3) && categoryValid > 10);
+    if (repeatedPhrases.length > 0) {
+      repeatedPhrases.forEach(([phrase, count]) => {
+        lintWarnings.push(\`Repetitive opening phrase: "\${phrase}..." appears \${count} times.\`);
+      });
+    }
+
+    if (lintWarnings.length > 0) {
+      console.log(\`   ⚠️ Lint Warnings:\`);
+      lintWarnings.forEach(w => console.log(\`      - \${w}\`));
+    }
   }
 
   console.log(\`\\n--- Validation Summary ---\`);
