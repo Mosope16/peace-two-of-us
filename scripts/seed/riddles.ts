@@ -41,4 +41,20 @@ export const riddleQuestions = [
     answer_type: 'text',
     options: { answer: 'Love', hint: 'The core reason you two are together.' },
   },
+  { game_slug: 'riddles', question_text: 'I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?', answer_type: 'text', options: { answer: 'An echo', hint: 'You hear me in mountains or empty rooms.' } },
+  { game_slug: 'riddles', question_text: 'You measure my life in hours and I serve you by expiring. I\'m quick when I\'m thin and slow when I\'m fat. The wind is my enemy. What am I?', answer_type: 'text', options: { answer: 'A candle', hint: 'I provide light but melt away.' } },
+  { game_slug: 'riddles', question_text: 'I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?', answer_type: 'text', options: { answer: 'A map', hint: 'You use me to find your way.' } },
+  { game_slug: 'riddles', question_text: 'What is seen in the middle of March and April that can\'t be seen at the beginning or end of either month?', answer_type: 'text', options: { answer: 'The letter R', hint: 'Look at the spelling.' } },
+  { game_slug: 'riddles', question_text: 'You see a boat filled with people. It has not sunk, but when you look again you don\'t see a single person on the boat. Why?', answer_type: 'text', options: { answer: 'They were all married', hint: 'Not a single person.' } },
+  { game_slug: 'riddles', question_text: 'What disappears as soon as you say its name?', answer_type: 'text', options: { answer: 'Silence', hint: 'Shhh.' } },
+  { game_slug: 'riddles', question_text: 'I have keys, but no locks and space, and no rooms. You can enter, but you can\'t go outside. What am I?', answer_type: 'text', options: { answer: 'A keyboard', hint: 'You use me to type.' } },
+  { game_slug: 'riddles', question_text: 'What gets wet while drying?', answer_type: 'text', options: { answer: 'A towel', hint: 'You use me after a shower.' } },
+  { game_slug: 'riddles', question_text: 'What has many teeth, but cannot bite?', answer_type: 'text', options: { answer: 'A comb', hint: 'You use me on your hair.' } },
+  { game_slug: 'riddles', question_text: 'I am an odd number. Take away a letter and I become even. What number am I?', answer_type: 'text', options: { answer: 'Seven', hint: 'S-E-V-E-N' } },
+  { game_slug: 'riddles', question_text: 'What has words, but never speaks?', answer_type: 'text', options: { answer: 'A book', hint: 'You read me.' } },
+  { game_slug: 'riddles', question_text: 'What has a head and a tail but no body?', answer_type: 'text', options: { answer: 'A coin', hint: 'You flip me to make a decision.' } },
+  { game_slug: 'riddles', question_text: 'What can you break, even if you never pick it up or touch it?', answer_type: 'text', options: { answer: 'A promise', hint: 'It\'s a commitment.' } },
+  { game_slug: 'riddles', question_text: 'I have branches, but no fruit, trunk or leaves. What am I?', answer_type: 'text', options: { answer: 'A bank', hint: 'You keep your money here.' } },
+  { game_slug: 'riddles', question_text: 'What goes up but never comes down?', answer_type: 'text', options: { answer: 'Your age', hint: 'You celebrate it every year.' } }
+
 ];
