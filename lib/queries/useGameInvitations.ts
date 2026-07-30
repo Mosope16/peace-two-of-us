@@ -83,9 +83,39 @@ export function useAcceptGameInvitation() {
 
   return useMutation({
     mutationFn: async (invitationId: string) => {
-      const { data, error } = await supabase.rpc('accept_game_invitation', { invite_id: invitationId });
-      if (error) throw error;
-      return data as string; // returns session_id
+      // 1. Fetch the invite details
+      const { data: invite, error: fetchError } = await supabase
+        .from('game_invitations')
+        .select('*')
+        .eq('id', invitationId)
+        .single();
+        
+      if (fetchError || !invite) throw fetchError || new Error('Invite not found');
+
+      // 2. Create the new game session directly
+      const { data: session, error: insertError } = await supabase
+        .from('game_sessions')
+        .insert({
+          couple_id: invite.couple_id,
+          game_type: invite.game_type,
+          status: 'subject_playing',
+          subject_user_id: invite.sender_id,
+          guesser_user_id: invite.receiver_id,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 3. Mark the invite as accepted
+      const { error: updateError } = await supabase
+        .from('game_invitations')
+        .update({ status: 'accepted' })
+        .eq('id', invitationId);
+
+      if (updateError) throw updateError;
+
+      return session.id as string;
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['game_invitations', coupleId] });
