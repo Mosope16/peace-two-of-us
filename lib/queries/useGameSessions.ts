@@ -251,22 +251,51 @@ export function useCreateGameRound() {
 
   return useMutation({
     mutationFn: async ({ sessionId, gameSlug, categoryId }: { sessionId: string; gameSlug: string; categoryId?: string }) => {
-      const { data, error } = await supabase.rpc('create_game_round', {
-        p_session_id: sessionId,
-        p_game_slug: gameSlug,
-        p_category_id: categoryId || null
-      });
+      // 1. Get Game ID
+      const { data: game, error: gameError } = await supabase
+        .from('games')
+        .select('id')
+        .eq('slug', gameSlug)
+        .single();
+      
+      if (gameError || !game) throw gameError || new Error('Game not found');
 
-      if (error) throw error;
+      // 2. Fetch questions
+      let query = supabase.from('questions').select('id, question_text, options, answer_type').eq('game_id', game.id);
+      if (categoryId) {
+        query = query.eq('category_id', categoryId);
+      }
+      
+      const { data: allQuestions, error: qError } = await query;
+      if (qError) throw qError;
 
-      return (data as unknown as Array<{
-        id: string;
-        text: string;
-        options: string[] | null;
-        answerType: string;
-        categoryName?: string | null;
-        categoryEmoji?: string | null;
-      }>) as SessionQuestion[];
+      if (!allQuestions || allQuestions.length === 0) {
+        throw new Error('No questions found for this game');
+      }
+
+      // 3. Shuffle and pick 5 questions
+      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+      // 4. Insert assignments
+      const assignments = shuffled.map(q => ({
+        session_id: sessionId,
+        question_id: q.id
+      }));
+
+      const { error: insertError } = await supabase
+        .from('session_question_assignments')
+        .insert(assignments);
+        
+      if (insertError) throw insertError;
+
+      return shuffled.map(q => ({
+        id: q.id,
+        text: q.question_text,
+        options: q.options,
+        answerType: q.answer_type,
+        categoryName: undefined,
+        categoryEmoji: undefined
+      })) as SessionQuestion[];
     },
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['session_questions', variables.sessionId] });

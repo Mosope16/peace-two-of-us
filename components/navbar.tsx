@@ -113,18 +113,18 @@ export default function Navbar() {
                 {activeMoodLog && <span className="text-sm">{getMoodDetails(activeMoodLog.mood).emoji}</span>}
               </button>
 
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-2 p-1.5 rounded-lg bg-surface border border-border hover:border-primary/40 text-xs text-zinc-200 transition-all"
+                  className="flex items-center space-x-2 p-1.5 rounded-lg bg-surface border border-border hover:border-primary/40 text-xs text-zinc-200 transition-all shrink-0"
                 >
                   <img
                     src={currentUser.avatar}
                     alt={currentUser.name}
-                    className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/50"
+                    className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/50 shrink-0"
                   />
-                  <span className="font-medium hidden md:inline">{currentUser.username || currentUser.name.split(' ')[0]}</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="font-medium hidden md:inline whitespace-nowrap shrink-0">{currentUser.username || currentUser.name.split(' ')[0]}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                 </button>
 
                 {isUserDropdownOpen && (
