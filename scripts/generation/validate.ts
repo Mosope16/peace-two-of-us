@@ -51,12 +51,12 @@ function validateQuestion(q: GeneratedQuestion, existingTexts: string[]): string
   if (!q.id) errors.push('Missing ID');
   if (!q.question_text || q.question_text.length < 10) errors.push('Question text too short or missing');
   if (!q.options || q.options.length !== 4) errors.push('Must have exactly 4 options');
-  if (!VALID_DIFFICULTIES.includes(q.difficulty)) errors.push(\`Invalid difficulty: \${q.difficulty}\`);
+  if (!VALID_DIFFICULTIES.includes(q.difficulty)) errors.push(`Invalid difficulty: ${q.difficulty}`);
   if (!q.tags || !Array.isArray(q.tags) || q.tags.length === 0) {
     errors.push('Missing tags');
   } else {
     for (const tag of q.tags) {
-      if (!VALID_TAGS.includes(tag)) errors.push(\`Invalid tag: \${tag}\`);
+      if (!VALID_TAGS.includes(tag)) errors.push(`Invalid tag: ${tag}`);
     }
   }
 
@@ -64,7 +64,7 @@ function validateQuestion(q: GeneratedQuestion, existingTexts: string[]): string
   const lowerText = q.question_text.toLowerCase();
   for (const word of FORBIDDEN_WORDS) {
     if (lowerText.includes(word)) {
-      errors.push(\`Contains forbidden phrase: "\${word}"\`);
+      errors.push(`Contains forbidden phrase: "${word}"`);
     }
   }
 
@@ -72,7 +72,7 @@ function validateQuestion(q: GeneratedQuestion, existingTexts: string[]): string
   for (const existing of existingTexts) {
     const sim = similarity(q.question_text, existing);
     if (sim > 0.8) {
-      errors.push(\`Too similar (\${(sim * 100).toFixed(0)}%) to existing: "\${existing}"\`);
+      errors.push(`Too similar (${(sim * 100).toFixed(0)}%) to existing: "${existing}"`);
       break;
     }
   }
@@ -102,7 +102,7 @@ function runValidation() {
       .filter(q => q.category_id === categoryId)
       .map(q => q.question_text);
 
-    console.log(\`\\n🔍 Validating \${file} (\${data.length} questions)...\`);
+    console.log(`\n🔍 Validating ${file} (${data.length} questions)...`);
 
     let categoryValid = 0;
     const existingTextsForCategory = [...seedTexts];
@@ -115,8 +115,8 @@ function runValidation() {
     for (const q of data) {
       const errors = validateQuestion(q, existingTextsForCategory);
       if (errors.length > 0) {
-        console.log(\`❌ [\${q.id}] \${q.question_text}\`);
-        errors.forEach(e => console.log(\`   - \${e}\`));
+        console.log(`❌ [${q.id}] ${q.question_text}`);
+        errors.forEach(e => console.log(`   - ${e}`));
         totalErrors++;
       } else {
         existingTextsForCategory.push(q.question_text);
@@ -140,19 +140,19 @@ function runValidation() {
       }
     }
     
-    console.log(\`✅ \${categoryValid} / \${data.length} valid in \${file}\`);
+    console.log(`✅ ${categoryValid} / ${data.length} valid in ${file}`);
 
     // Lint Warnings
     const lintWarnings: string[] = [];
     if (startsWithWhat > (categoryValid * 0.4)) {
-      lintWarnings.push(\`Too many questions start with "What's/What is" (\${startsWithWhat}/\${categoryValid})\`);
+      lintWarnings.push(`Too many questions start with "What's/What is" (${startsWithWhat}/${categoryValid})`);
     }
     
     // Difficulty balance
     const maxDiff = Math.max(...Object.values(difficulties));
     const minDiff = Math.min(...Object.values(difficulties));
     if (categoryValid > 15 && maxDiff > (minDiff * 3 + 5)) {
-       lintWarnings.push(\`Unbalanced difficulty distribution (Easy: \${difficulties.easy}, Medium: \${difficulties.medium}, Deep: \${difficulties.deep})\`);
+       lintWarnings.push(`Unbalanced difficulty distribution (Easy: ${difficulties.easy}, Medium: ${difficulties.medium}, Deep: ${difficulties.deep})`);
     }
 
     // Repeated phrases
@@ -160,19 +160,19 @@ function runValidation() {
       .filter(([phrase, count]) => count > (categoryValid * 0.3) && categoryValid > 10);
     if (repeatedPhrases.length > 0) {
       repeatedPhrases.forEach(([phrase, count]) => {
-        lintWarnings.push(\`Repetitive opening phrase: "\${phrase}..." appears \${count} times.\`);
+        lintWarnings.push(`Repetitive opening phrase: "${phrase}..." appears ${count} times.`);
       });
     }
 
     if (lintWarnings.length > 0) {
-      console.log(\`   ⚠️ Lint Warnings:\`);
-      lintWarnings.forEach(w => console.log(\`      - \${w}\`));
+      console.log(`   ⚠️ Lint Warnings:`);
+      lintWarnings.forEach(w => console.log(`      - ${w}`));
     }
   }
 
-  console.log(\`\\n--- Validation Summary ---\`);
-  console.log(\`Total Valid: \${totalValid}\`);
-  console.log(\`Total Errors: \${totalErrors}\`);
+  console.log(`\n--- Validation Summary ---`);
+  console.log(`Total Valid: ${totalValid}`);
+  console.log(`Total Errors: ${totalErrors}`);
   if (totalErrors > 0) {
     console.log('⚠️ Please review the errors, fix them in the JSON files, or delete the bad questions.');
   }

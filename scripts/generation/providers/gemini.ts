@@ -84,14 +84,14 @@ export class GeminiProvider implements LLMProvider {
 
   private buildPrompt(options: GenerationPromptOptions): string {
     const existingList = options.existingQuestions.length > 0 
-      ? \`Avoid questions too similar to these existing ones:\n\${options.existingQuestions.slice(0, 20).map(q => \`- \${q}\`).join('\\n')}\`
+      ? `Avoid questions too similar to these existing ones:\n${options.existingQuestions.slice(0, 20).map(q => `- ${q}`).join('\n')}`
       : '';
 
-    return \`
+    return `
 You are an expert game designer creating questions for a couple's relationship app (like 'Know Me' or 'The Newlywed Game').
 
-Task: Generate exactly \${options.count} unique, high-quality questions for the category "\${options.categoryName}".
-Category Description: \${options.categoryDescription}
+Task: Generate exactly ${options.count} unique, high-quality questions for the category "${options.categoryName}".
+Category Description: ${options.categoryDescription}
 
 Guidelines:
 1. Tone: Fun, wholesome, deep, and conversational. Use "I/me" (e.g., "What is my favorite...", "How do I..."). DO NOT use placeholders like "your partner".
@@ -99,7 +99,7 @@ Guidelines:
 3. Difficulty: Classify each question as 'easy', 'medium', or 'deep'.
 4. Tags: Assign 1-3 tags from this exact list: ["future", "travel", "career", "family", "food", "movies", "music", "childhood", "romance", "communication", "dreams", "intimacy", "funny", "habits", "values", "hypothetical"].
 
-\${existingList}
+${existingList}
 
 Respond strictly in JSON format matching this schema:
 {
@@ -112,6 +112,6 @@ Respond strictly in JSON format matching this schema:
     }
   ]
 }
-\`;
+`;
   }
 }

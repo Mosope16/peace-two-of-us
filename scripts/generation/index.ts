@@ -43,7 +43,7 @@ async function runGeneration(provider: LLMProvider, targetCategorySlug?: string,
 
   for (const category of categories) {
     const slug = category.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    console.log(\`\\n--- Processing Category: \${category.name} ---\`);
+    console.log(`\n--- Processing Category: ${category.name} ---`);
 
     // Load existing questions for context (from seed and already generated)
     const seedQuestions = knowMeQuestions
@@ -51,13 +51,13 @@ async function runGeneration(provider: LLMProvider, targetCategorySlug?: string,
       .map(q => q.question_text);
     
     let generatedQuestions: any[] = [];
-    const outputFile = path.join(OUTPUT_DIR, \`\${slug}.json\`);
+    const outputFile = path.join(OUTPUT_DIR, `${slug}.json`);
     
     if (fs.existsSync(outputFile)) {
       try {
         generatedQuestions = JSON.parse(fs.readFileSync(outputFile, 'utf-8'));
       } catch (e) {
-        console.warn(\`Could not parse existing file \${outputFile}. Starting fresh for this category.\`);
+        console.warn(`Could not parse existing file ${outputFile}. Starting fresh for this category.`);
       }
     }
 
@@ -70,7 +70,7 @@ async function runGeneration(provider: LLMProvider, targetCategorySlug?: string,
     const currentGenerated = generatedQuestions.length;
     
     if (currentGenerated >= TARGET_GENERATED) {
-      console.log(\`Already have \${currentGenerated} generated questions for \${category.name}. Skipping.\`);
+      console.log(`Already have ${currentGenerated} generated questions for ${category.name}. Skipping.`);
       continue;
     }
 
@@ -78,7 +78,7 @@ async function runGeneration(provider: LLMProvider, targetCategorySlug?: string,
     // Batch size of 10 as recommended
     const batchSize = Math.min(10, needed);
     
-    console.log(\`Need \${needed} more questions. Generating a batch of \${batchSize}...\`);
+    console.log(`Need ${needed} more questions. Generating a batch of ${batchSize}...`);
     
     try {
       const response = await provider.generateQuestions({
@@ -94,13 +94,13 @@ async function runGeneration(provider: LLMProvider, targetCategorySlug?: string,
       if (response.questions && response.questions.length > 0) {
         const newQuestions = [...generatedQuestions, ...response.questions];
         fs.writeFileSync(outputFile, JSON.stringify(newQuestions, null, 2), 'utf-8');
-        console.log(\`✅ Successfully generated and saved \${response.questions.length} questions to \${outputFile}\`);
+        console.log(`✅ Successfully generated and saved ${response.questions.length} questions to ${outputFile}`);
       } else {
-        console.log(\`⚠️ Provider returned no questions.\`);
+        console.log(`⚠️ Provider returned no questions.`);
       }
 
     } catch (e: any) {
-      console.error(\`❌ Failed to generate batch for \${category.name}:\`, e.message);
+      console.error(`❌ Failed to generate batch for ${category.name}:`, e.message);
     }
   }
 }

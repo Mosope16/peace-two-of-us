@@ -53,38 +53,38 @@ function compile() {
     }
   }
 
-  console.log(\`\\n--- Know Me Library Statistics ---\\n\`);
+  console.log(`\n--- Know Me Library Statistics ---\n`);
   let canCompile = true;
   const TARGET = 50;
 
   for (const [catId, stats] of Object.entries(categoryStats)) {
     const total = stats.seeded + stats.approved;
-    console.log(\`\${stats.name}\`);
-    console.log(\`\${total} questions (\${stats.seeded} core + \${stats.approved} generated)\`);
+    console.log(`${stats.name}`);
+    console.log(`${total} questions (${stats.seeded} core + ${stats.approved} generated)`);
     
     if (total >= TARGET) {
-      console.log(\`✅ \${total} / \${TARGET}\\n\`);
+      console.log(`✅ ${total} / ${TARGET}\n`);
     } else {
-      console.log(\`❌ \${total} / \${TARGET}\\n\`);
+      console.log(`❌ ${total} / ${TARGET}\n`);
       canCompile = false;
     }
   }
 
   if (!canCompile) {
-    console.error(\`❌ Compile failed: Not all categories have reached the target of \${TARGET} questions.\`);
+    console.error(`❌ Compile failed: Not all categories have reached the target of ${TARGET} questions.`);
     process.exit(1);
   }
 
-  const fileContent = \`// AUTO-GENERATED FILE. DO NOT EDIT DIRECTLY.
+  const fileContent = `// AUTO-GENERATED FILE. DO NOT EDIT DIRECTLY.
 // Run 'npx tsx scripts/generation/compile.ts' to regenerate this file from approved JSONs.
 
-export const generatedKnowMeQuestions = \${JSON.stringify(compiledQuestions, null, 2)};
-\`;
+export const generatedKnowMeQuestions = ${JSON.stringify(compiledQuestions, null, 2)};
+`;
 
   fs.writeFileSync(OUTPUT_FILE, fileContent, 'utf-8');
-  console.log(\`✅ Compiled \${totalApproved} approved questions to \${OUTPUT_FILE}\`);
+  console.log(`✅ Compiled ${totalApproved} approved questions to ${OUTPUT_FILE}`);
   if (totalPending > 0) {
-    console.log(\`⚠️ There are \${totalPending} pending questions awaiting approval in JSON files.\`);
+    console.log(`⚠️ There are ${totalPending} pending questions awaiting approval in JSON files.`);
   }
 }
 
