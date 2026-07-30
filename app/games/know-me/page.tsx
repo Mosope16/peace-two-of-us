@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, CheckCircle2, Heart, Clock, Play, RotateCcw, Flame, Shuffle, Trophy, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, CheckCircle2, Heart, Clock, Play, RotateCcw, Flame, Shuffle, Trophy, ArrowRight, Loader2, Users } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useActiveGameSessions, useSubmitSubjectAnswers, useSubmitGuesserAnswers, useCalculateGameScore, useGameAnswers, useSessionQuestions, useCreateGameRound, useGameCategories, SessionQuestion } from '@/lib/queries/useGameSessions';
+import { LiveCursors } from '@/components/live-cursors';
+import { supabase } from '@/lib/supabase';
 
 export default function KnowMeQuizPage() {
   const { currentUser, partner } = useLDRStore();
@@ -36,6 +38,34 @@ export default function KnowMeQuizPage() {
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({});
   const [questionsList, setQuestionsList] = useState<SessionQuestion[]>([]);
   const roundRequestKeyRef = useRef<string | null>(null);
+
+  // Synced state for category selection
+  const [playerSelections, setPlayerSelections] = useState<Record<string, string>>({});
+
+  // Sync category selections via Broadcast
+  useEffect(() => {
+    if (!sessionId || !currentUser) return;
+
+    const channel = supabase.channel(`game_session:${sessionId}`);
+    
+    channel.on('broadcast', { event: 'propose_category' }, ({ payload }) => {
+      setPlayerSelections(prev => ({ ...prev, [payload.userId]: payload.categoryId }));
+    }).subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, currentUser]);
+
+  const handleProposeCategory = (categoryId: string) => {
+    if (!sessionId || !currentUser) return;
+    setPlayerSelections(prev => ({ ...prev, [currentUser.id]: categoryId }));
+    supabase.channel(`game_session:${sessionId}`).send({
+      type: 'broadcast',
+      event: 'propose_category',
+      payload: { userId: currentUser.id, categoryId }
+    });
+  };
 
   // Invalidate session questions when session status changes (e.g. from subject_playing to waiting_for_guesser)
   useEffect(() => {
@@ -141,6 +171,7 @@ export default function KnowMeQuizPage() {
 
   return (
     <div className="space-y-8 pb-12">
+      {sessionId && <LiveCursors channelName={`game_session:${sessionId}`} />}
       {/* Top Navigation Back Bar */}
       <div className="flex items-center justify-between">
         <Link
@@ -185,32 +216,91 @@ export default function KnowMeQuizPage() {
             </div>
           ) : session ? (
             <div className="soft-card rounded-2xl p-8 border border-border text-center space-y-4">
-              {session.status === 'subject_playing' && session.subject_user_id === currentUser.id && sessionQuestions.length === 0 ? (
+              {session.status === 'subject_playing' && sessionQuestions.length === 0 ? (
                 <>
                   <h2 className="text-xl font-bold text-white">Choose a Category</h2>
-                  <p className="text-sm text-zinc-400">Select a topic for this round!</p>
+                  <p className="text-sm text-zinc-400">Both of you must select the same category to start.</p>
+                  
+                  {/* Status Indicator */}
+                  <div className="mt-2 text-xs font-medium">
+                    {playerSelections[currentUser.id] && playerSelections[partner?.id || ''] ? (
+                      playerSelections[currentUser.id] === playerSelections[partner?.id || ''] ? (
+                        <span className="text-emerald-400 flex items-center justify-center gap-1"><CheckCircle2 className="w-3 h-3" /> Category Agreed!</span>
+                      ) : (
+                        <span className="text-amber-400 flex items-center justify-center gap-1"><Clock className="w-3 h-3" /> Waiting to agree...</span>
+                      )
+                    ) : (
+                      <span className="text-zinc-500">Waiting for selections...</span>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                     <button 
-                      onClick={() => createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me' })}
-                      className="p-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-left transition-all group"
+                      onClick={() => handleProposeCategory('random')}
+                      className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group ${playerSelections[currentUser.id] === 'random' ? 'border-rose-500 bg-rose-500/10' : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800'}`}
                       disabled={createGameRound.isPending}
                     >
                       <span className="text-xl mr-2 group-hover:scale-110 inline-block transition-transform">🎲</span> 
                       <span className="font-bold text-zinc-200 group-hover:text-white transition-colors">Random Mix</span>
+                      
+                      {/* Avatars for Random Mix */}
+                      <div className="absolute top-2 right-2 flex -space-x-1">
+                        {playerSelections[currentUser.id] === 'random' && (
+                          <div className="w-6 h-6 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center border-2 border-zinc-900 z-10" title="You">
+                            {currentUser.name.charAt(0)}
+                          </div>
+                        )}
+                        {playerSelections[partner?.id || ''] === 'random' && (
+                          <div className="w-6 h-6 rounded-full bg-pink-500 text-[10px] font-bold text-white flex items-center justify-center border-2 border-zinc-900 z-0" title={partner?.name}>
+                            {partner?.name?.charAt(0)}
+                          </div>
+                        )}
+                      </div>
                     </button>
-                    {categories.map(cat => (
+                    {categories.map(cat => {
+                      const isMeSelected = playerSelections[currentUser.id] === cat.id;
+                      const isPartnerSelected = playerSelections[partner?.id || ''] === cat.id;
+                      
+                      return (
                       <button 
                         key={cat.id}
-                        onClick={() => createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me', categoryId: cat.id })}
-                        className="p-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-left transition-all group"
+                        onClick={() => handleProposeCategory(cat.id)}
+                        className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group ${isMeSelected ? 'border-rose-500 bg-rose-500/10' : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800'}`}
                         disabled={createGameRound.isPending}
                       >
                         <span className="text-xl mr-2 group-hover:scale-110 inline-block transition-transform">{cat.emoji}</span> 
                         <span className="font-bold text-zinc-200 group-hover:text-white transition-colors">{cat.name}</span>
+                        
+                        {/* Avatars */}
+                        <div className="absolute top-2 right-2 flex -space-x-1">
+                          {isMeSelected && (
+                            <div className="w-6 h-6 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center border-2 border-zinc-900 z-10" title="You">
+                              {currentUser.name.charAt(0)}
+                            </div>
+                          )}
+                          {isPartnerSelected && (
+                            <div className="w-6 h-6 rounded-full bg-pink-500 text-[10px] font-bold text-white flex items-center justify-center border-2 border-zinc-900 z-0" title={partner?.name}>
+                              {partner?.name?.charAt(0)}
+                            </div>
+                          )}
+                        </div>
                       </button>
-                    ))}
+                    )})}
                   </div>
-                  {createGameRound.isPending && <p className="text-sm text-rose-400 animate-pulse mt-4">Generating questions...</p>}
+                  
+                  {/* Start Game Button (only visible when agreed) */}
+                  {playerSelections[currentUser.id] && playerSelections[currentUser.id] === playerSelections[partner?.id || ''] && (
+                    <div className="pt-4 border-t border-zinc-800 mt-6">
+                      <button
+                        onClick={() => createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me', categoryId: playerSelections[currentUser.id] === 'random' ? undefined : playerSelections[currentUser.id] })}
+                        className="w-full sm:w-auto px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center mx-auto"
+                        disabled={createGameRound.isPending}
+                      >
+                        {createGameRound.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Start Game'}
+                      </button>
+                    </div>
+                  )}
+                  {createGameRound.isPending && <p className="text-sm text-emerald-400 animate-pulse mt-4">Generating questions...</p>}
                 </>
               ) : (
                 <>
