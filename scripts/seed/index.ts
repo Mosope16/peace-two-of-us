@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { games } from './games';
 import { knowMeCategories, knowMeQuestions } from './know-me';
+import { generatedKnowMeQuestions } from './generated-know-me';
 import { iqDuelQuestions } from './iq-duel';
 import { riddleQuestions } from './riddles';
 import { thisOrThatQuestions } from './this-or-that';
@@ -91,6 +92,11 @@ async function seed() {
 
   const allQuestions = [
     ...knowMeQuestions.map(q => ({
+      id: createStableQuestionId(gameMap.get('know-me'), q.category_id, q.question_text),
+      ...q,
+      game_id: gameMap.get('know-me')
+    })),
+    ...generatedKnowMeQuestions.map(q => ({
       id: createStableQuestionId(gameMap.get('know-me'), q.category_id, q.question_text),
       ...q,
       game_id: gameMap.get('know-me')

@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS public.questions (
   correct_index INT,
   difficulty TEXT DEFAULT 'medium',
   weight INT DEFAULT 1,
+  tags TEXT[] DEFAULT '{}',
   is_active BOOLEAN DEFAULT true,
   is_adult BOOLEAN DEFAULT false,
   status TEXT DEFAULT 'approved', -- 'draft', 'approved', 'archived'
