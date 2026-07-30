@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { ArrowLeft, Sparkles, CheckCircle2, Heart, Clock, Play, RotateCcw, Flame, Shuffle, Trophy, ArrowRight, Loader2 } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useActiveGameSessions, useSubmitSubjectAnswers, useSubmitGuesserAnswers, useCalculateGameScore, useGameAnswers, useSessionQuestions, useCreateGameRound, SessionQuestion } from '@/lib/queries/useGameSessions';
+import { useQueryClient } from '@tanstack/react-query';
+import { useActiveGameSessions, useSubmitSubjectAnswers, useSubmitGuesserAnswers, useCalculateGameScore, useGameAnswers, useSessionQuestions, useCreateGameRound, useGameCategories, SessionQuestion } from '@/lib/queries/useGameSessions';
 
 export default function KnowMeQuizPage() {
   const { currentUser, partner } = useLDRStore();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const sessionId = searchParams.get('session');
 
   const { data: sessions = [], isLoading: sessionsLoading } = useActiveGameSessions();
@@ -18,6 +20,7 @@ export default function KnowMeQuizPage() {
 
   const { data: dbAnswers = [], isLoading: answersLoading } = useGameAnswers(sessionId);
   const { data: sessionQuestions = [], isLoading: questionsLoading } = useSessionQuestions(sessionId);
+  const { data: categories = [] } = useGameCategories('know-me');
   const createGameRound = useCreateGameRound();
   
   const submitSubjectAnswers = useSubmitSubjectAnswers();
@@ -34,33 +37,33 @@ export default function KnowMeQuizPage() {
   const [questionsList, setQuestionsList] = useState<SessionQuestion[]>([]);
   const roundRequestKeyRef = useRef<string | null>(null);
 
-  // Automatically start quiz if session is active and we are the active player
+  // Invalidate session questions when session status changes (e.g. from subject_playing to waiting_for_guesser)
+  useEffect(() => {
+    if (session?.status && session.id) {
+      queryClient.invalidateQueries({ queryKey: ['session_questions', session.id] });
+    }
+  }, [session?.status, session?.id, queryClient]);
+
+  // Automatically start quiz if session is active and we have questions
   useEffect(() => {
     if (!session || isQuizActive || isRoundFinished || !sessionId) return;
 
-    const roundRequestKey = `${session.id}:${session.status}`;
-
     if (session.status === 'subject_playing' && session.subject_user_id === currentUser.id) {
       if (sessionQuestions.length > 0) {
-        roundRequestKeyRef.current = null;
         setQuestionsList(sessionQuestions);
         setIsQuizActive(true);
         setCurrentQIndex(0);
         setTimerSeconds(60);
-      } else if (!createGameRound.isPending && roundRequestKeyRef.current !== roundRequestKey) {
-        roundRequestKeyRef.current = roundRequestKey;
-        createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me' });
       }
     } else if (session.status === 'waiting_for_guesser' && session.guesser_user_id === currentUser.id) {
       if (sessionQuestions.length > 0) {
-        roundRequestKeyRef.current = null;
         setQuestionsList(sessionQuestions);
         setIsQuizActive(true);
         setCurrentQIndex(0);
         setTimerSeconds(60);
       }
     }
-  }, [session, isQuizActive, isRoundFinished, currentUser.id, sessionQuestions, createGameRound, sessionId]);
+  }, [session, isQuizActive, isRoundFinished, currentUser.id, sessionQuestions, sessionId]);
 
   // Per-Question 1-Minute (60 Seconds) Countdown Timer
   useEffect(() => {
@@ -182,9 +185,38 @@ export default function KnowMeQuizPage() {
             </div>
           ) : session ? (
             <div className="soft-card rounded-2xl p-8 border border-border text-center space-y-4">
-              <h2 className="text-xl font-bold text-white">
-                {session.status === 'completed' ? 'Game Completed!' : 'Waiting for Partner'}
-              </h2>
+              {session.status === 'subject_playing' && session.subject_user_id === currentUser.id && sessionQuestions.length === 0 ? (
+                <>
+                  <h2 className="text-xl font-bold text-white">Choose a Category</h2>
+                  <p className="text-sm text-zinc-400">Select a topic for this round!</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <button 
+                      onClick={() => createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me' })}
+                      className="p-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-left transition-all group"
+                      disabled={createGameRound.isPending}
+                    >
+                      <span className="text-xl mr-2 group-hover:scale-110 inline-block transition-transform">🎲</span> 
+                      <span className="font-bold text-zinc-200 group-hover:text-white transition-colors">Random Mix</span>
+                    </button>
+                    {categories.map(cat => (
+                      <button 
+                        key={cat.id}
+                        onClick={() => createGameRound.mutate({ sessionId: session.id, gameSlug: 'know-me', categoryId: cat.id })}
+                        className="p-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-left transition-all group"
+                        disabled={createGameRound.isPending}
+                      >
+                        <span className="text-xl mr-2 group-hover:scale-110 inline-block transition-transform">{cat.emoji}</span> 
+                        <span className="font-bold text-zinc-200 group-hover:text-white transition-colors">{cat.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {createGameRound.isPending && <p className="text-sm text-rose-400 animate-pulse mt-4">Generating questions...</p>}
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold text-white">
+                    {session.status === 'completed' ? 'Game Completed!' : 'Waiting for Partner'}
+                  </h2>
               <p className="text-sm text-zinc-400">
                 {session.status === 'subject_playing' && session.guesser_user_id === currentUser.id && `${partner?.name.split(' ')[0]} is currently answering questions...`}
                 {session.status === 'waiting_for_guesser' && session.subject_user_id === currentUser.id && `${partner?.name.split(' ')[0]} is currently guessing your answers...`}
@@ -221,6 +253,8 @@ export default function KnowMeQuizPage() {
                     })}
                   </div>
                 </div>
+              )}
+                </>
               )}
             </div>
           ) : (
