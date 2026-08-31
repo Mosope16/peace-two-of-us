@@ -31,11 +31,36 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   const isApplyingRemoteAction = useRef<boolean>(false);
   const updatePlaybackMutation = useUpdateWatchPlayback();
 
+  // Helper safe callers
+  const safeGetCurrentTime = useCallback(() => {
+    try {
+      if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+        return playerRef.current.getCurrentTime() || 0;
+      }
+    } catch {
+      // ignore during iframe teardown
+    }
+    return 0;
+  }, []);
+
+  const safeGetDuration = useCallback(() => {
+    try {
+      if (playerRef.current && typeof playerRef.current.getDuration === 'function') {
+        return playerRef.current.getDuration() || 0;
+      }
+    } catch {
+      // ignore
+    }
+    return 0;
+  }, []);
+
   // Realtime Callbacks
   const handleRemotePlay = useCallback((targetPos: number) => {
-    if (!playerRef.current || !playerRef.current.playVideo) return;
+    if (!playerRef.current || typeof playerRef.current.playVideo !== 'function') return;
     isApplyingRemoteAction.current = true;
-    playerRef.current.seekTo(targetPos, true);
+    if (typeof playerRef.current.seekTo === 'function') {
+      playerRef.current.seekTo(targetPos, true);
+    }
     playerRef.current.playVideo();
     setIsPlaying(true);
     setTimeout(() => {
@@ -44,9 +69,11 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   }, []);
 
   const handleRemotePause = useCallback((targetPos: number) => {
-    if (!playerRef.current || !playerRef.current.pauseVideo) return;
+    if (!playerRef.current || typeof playerRef.current.pauseVideo !== 'function') return;
     isApplyingRemoteAction.current = true;
-    playerRef.current.seekTo(targetPos, true);
+    if (typeof playerRef.current.seekTo === 'function') {
+      playerRef.current.seekTo(targetPos, true);
+    }
     playerRef.current.pauseVideo();
     setIsPlaying(false);
     setTimeout(() => {
@@ -55,7 +82,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   }, []);
 
   const handleRemoteSeek = useCallback((targetPos: number) => {
-    if (!playerRef.current || !playerRef.current.seekTo) return;
+    if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
     isApplyingRemoteAction.current = true;
     playerRef.current.seekTo(targetPos, true);
     setCurrentTime(targetPos);
@@ -65,19 +92,23 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   }, []);
 
   const handleSyncRequest = useCallback(() => {
-    const pos = playerRef.current?.getCurrentTime() || 0;
-    const playing = playerRef.current?.getPlayerState() === 1;
+    const pos = safeGetCurrentTime();
+    const playing = playerRef.current && typeof playerRef.current.getPlayerState === 'function'
+      ? playerRef.current.getPlayerState() === 1
+      : false;
     return { position: pos, isPlaying: playing };
-  }, []);
+  }, [safeGetCurrentTime]);
 
   const handleSyncResponse = useCallback((pos: number, playing: boolean) => {
     if (!playerRef.current) return;
     isApplyingRemoteAction.current = true;
-    playerRef.current.seekTo(pos, true);
-    if (playing) {
+    if (typeof playerRef.current.seekTo === 'function') {
+      playerRef.current.seekTo(pos, true);
+    }
+    if (playing && typeof playerRef.current.playVideo === 'function') {
       playerRef.current.playVideo();
       setIsPlaying(true);
-    } else {
+    } else if (!playing && typeof playerRef.current.pauseVideo === 'function') {
       playerRef.current.pauseVideo();
       setIsPlaying(false);
     }
@@ -87,7 +118,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   }, []);
 
   const handleVideoChanged = useCallback((newMediaId: string) => {
-    if (!playerRef.current || !playerRef.current.loadVideoById) return;
+    if (!playerRef.current || typeof playerRef.current.loadVideoById !== 'function') return;
     isApplyingRemoteAction.current = true;
     playerRef.current.loadVideoById(newMediaId);
     setTimeout(() => {
@@ -100,7 +131,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   }, [onReactionTriggered]);
 
   const handleSessionEnded = useCallback(() => {
-    if (playerRef.current?.pauseVideo) {
+    if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
       playerRef.current.pauseVideo();
     }
     setIsPlaying(false);
@@ -132,6 +163,8 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
   // Load YouTube IFrame API Script
   useEffect(() => {
+    let isCancelled = false;
+
     if (window.YT && window.YT.Player) {
       initPlayer();
       return;
@@ -143,7 +176,9 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
     window.onYouTubeIframeAPIReady = () => {
-      initPlayer();
+      if (!isCancelled) {
+        initPlayer();
+      }
     };
 
     function initPlayer() {
@@ -164,8 +199,9 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
         events: {
           onReady: (event: any) => {
             setIsPlayerReady(true);
-            setDuration(event.target.getDuration() || 0);
-            if (session.current_position > 0) {
+            const dur = typeof event.target.getDuration === 'function' ? event.target.getDuration() : 0;
+            if (dur > 0) setDuration(dur);
+            if (session.current_position > 0 && typeof event.target.seekTo === 'function') {
               event.target.seekTo(session.current_position, true);
             }
           },
@@ -175,7 +211,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
             if (playerState === 1) {
               setIsPlaying(true);
               if (!isApplyingRemoteAction.current) {
-                const pos = playerRef.current?.getCurrentTime() || 0;
+                const pos = safeGetCurrentTime();
                 broadcastPlay(pos);
                 updatePlaybackMutation.mutate({
                   sessionId: session.id,
@@ -186,7 +222,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
             } else if (playerState === 2) {
               setIsPlaying(false);
               if (!isApplyingRemoteAction.current) {
-                const pos = playerRef.current?.getCurrentTime() || 0;
+                const pos = safeGetCurrentTime();
                 broadcastPause(pos);
                 updatePlaybackMutation.mutate({
                   sessionId: session.id,
@@ -211,19 +247,26 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     }
 
     return () => {
-      if (playerRef.current && playerRef.current.destroy) {
-        playerRef.current.destroy();
+      isCancelled = true;
+      setIsPlayerReady(false);
+      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+        try {
+          playerRef.current.destroy();
+        } catch {
+          // ignore
+        }
       }
     };
-  }, [session.media_id, session.current_position, session.id, broadcastPlay, broadcastPause, updatePlaybackMutation]);
+  }, [session.media_id, session.current_position, session.id, broadcastPlay, broadcastPause, updatePlaybackMutation, safeGetCurrentTime]);
 
   // Track Playback Time, Presence, & Drift Calculation Loop
   useEffect(() => {
     const interval = setInterval(() => {
       if (!playerRef.current || !isPlayerReady) return;
+      if (typeof playerRef.current.getCurrentTime !== 'function') return;
 
-      const pos = playerRef.current.getCurrentTime() || 0;
-      const dur = playerRef.current.getDuration() || 0;
+      const pos = safeGetCurrentTime();
+      const dur = safeGetDuration();
       setCurrentTime(pos);
       if (dur > 0) setDuration(dur);
 
@@ -238,20 +281,27 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
         if (drift < 1.0) {
           setSyncStatus('synced');
-          playerRef.current.setPlaybackRate(1.0);
+          if (typeof playerRef.current.setPlaybackRate === 'function') {
+            playerRef.current.setPlaybackRate(1.0);
+          }
         } else if (drift >= 1.0 && drift <= 3.0) {
           setSyncStatus('catching_up');
-          // If local player is behind partner, speed up slightly; otherwise slow down
-          if (pos < partnerPresence.current_position) {
-            playerRef.current.setPlaybackRate(1.05);
-          } else {
-            playerRef.current.setPlaybackRate(0.95);
+          if (typeof playerRef.current.setPlaybackRate === 'function') {
+            if (pos < partnerPresence.current_position) {
+              playerRef.current.setPlaybackRate(1.05);
+            } else {
+              playerRef.current.setPlaybackRate(0.95);
+            }
           }
         } else if (drift > 3.0 && !isApplyingRemoteAction.current) {
           // Major drift: hard seek to partner position
           isApplyingRemoteAction.current = true;
-          playerRef.current.seekTo(partnerPresence.current_position, true);
-          playerRef.current.setPlaybackRate(1.0);
+          if (typeof playerRef.current.seekTo === 'function') {
+            playerRef.current.seekTo(partnerPresence.current_position, true);
+          }
+          if (typeof playerRef.current.setPlaybackRate === 'function') {
+            playerRef.current.setPlaybackRate(1.0);
+          }
           setSyncStatus('synced');
           setTimeout(() => {
             isApplyingRemoteAction.current = false;
@@ -261,22 +311,26 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPlayerReady, isPlaying, partnerPresence, session.id, updatePresence, setSyncStatus, setDriftSeconds]);
+  }, [isPlayerReady, isPlaying, partnerPresence, session.id, updatePresence, setSyncStatus, setDriftSeconds, safeGetCurrentTime, safeGetDuration]);
 
   // Local Controls
   const togglePlay = () => {
     if (!playerRef.current) return;
     if (isPlaying) {
-      playerRef.current.pauseVideo();
+      if (typeof playerRef.current.pauseVideo === 'function') {
+        playerRef.current.pauseVideo();
+      }
     } else {
-      playerRef.current.playVideo();
+      if (typeof playerRef.current.playVideo === 'function') {
+        playerRef.current.playVideo();
+      }
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = parseFloat(e.target.value);
     setCurrentTime(target);
-    if (playerRef.current && playerRef.current.seekTo) {
+    if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
       playerRef.current.seekTo(target, true);
       broadcastSeek(target);
     }
@@ -285,10 +339,14 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   const toggleMute = () => {
     if (!playerRef.current) return;
     if (isMuted) {
-      playerRef.current.unMute();
+      if (typeof playerRef.current.unMute === 'function') {
+        playerRef.current.unMute();
+      }
       setIsMuted(false);
     } else {
-      playerRef.current.mute();
+      if (typeof playerRef.current.mute === 'function') {
+        playerRef.current.mute();
+      }
       setIsMuted(true);
     }
   };
