@@ -2,10 +2,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
   RotateCcw,
   AlertTriangle,
   Sparkles,
@@ -35,7 +31,6 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -157,7 +152,6 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   const {
     broadcastPlay,
     broadcastPause,
-    broadcastSeek,
     broadcastSyncRequest,
     broadcastReaction,
     updatePresence,
@@ -196,7 +190,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     };
   }, []);
 
-  // Load YouTube IFrame API Script
+  // Load and initialize YouTube Player
   useEffect(() => {
     let isCancelled = false;
 
@@ -210,7 +204,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
           videoId: session.media_id,
           playerVars: {
             autoplay: 0,
-            controls: 0, // Custom Peace controls
+            controls: 1, // Standard interactive controls for reliable play/pause/seek
             rel: 0,
             modestbranding: 1,
             playsinline: 1,
@@ -225,10 +219,6 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
               const dur = typeof event.target.getDuration === 'function' ? event.target.getDuration() : 0;
               if (dur > 0) setDuration(dur);
-
-              if (typeof event.target.isMuted === 'function') {
-                setIsMuted(event.target.isMuted());
-              }
 
               if (session.current_position > 0 && typeof event.target.seekTo === 'function') {
                 event.target.seekTo(session.current_position, true);
@@ -265,7 +255,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
               const code = event.data;
               if (code === 101 || code === 150) {
                 setErrorMessage(
-                  'This YouTube video does not allow embedded playback. Please try another video.'
+                  'This YouTube video does not allow embedded playback. Please try another video URL.'
                 );
               } else if (code === 100) {
                 setErrorMessage('YouTube video not found or removed.');
@@ -316,7 +306,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     safeGetCurrentTime,
   ]);
 
-  // Playback Time, Presence, & Drift Calculation Loop
+  // Track Playback Time, Presence, & Drift Calculation Loop
   useEffect(() => {
     const interval = setInterval(() => {
       if (!playerRef.current || !isPlayerReady) return;
@@ -379,59 +369,6 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     safeGetDuration,
   ]);
 
-  // Controls: Play / Pause
-  const togglePlay = () => {
-    if (!playerRef.current) return;
-    try {
-      if (isPlaying) {
-        if (typeof playerRef.current.pauseVideo === 'function') {
-          playerRef.current.pauseVideo();
-        }
-        setIsPlaying(false);
-      } else {
-        if (typeof playerRef.current.playVideo === 'function') {
-          playerRef.current.playVideo();
-        }
-        setIsPlaying(true);
-      }
-    } catch (e) {
-      console.warn('Play/Pause toggle note:', e);
-    }
-  };
-
-  // Controls: Seek
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const target = parseFloat(e.target.value);
-    setCurrentTime(target);
-    if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
-      playerRef.current.seekTo(target, true);
-      broadcastSeek(target);
-    }
-  };
-
-  // Controls: Mute / Unmute
-  const toggleMute = () => {
-    if (!playerRef.current) return;
-    try {
-      if (isMuted) {
-        if (typeof playerRef.current.unMute === 'function') {
-          playerRef.current.unMute();
-        }
-        if (typeof playerRef.current.setVolume === 'function') {
-          playerRef.current.setVolume(100);
-        }
-        setIsMuted(false);
-      } else {
-        if (typeof playerRef.current.mute === 'function') {
-          playerRef.current.mute();
-        }
-        setIsMuted(true);
-      }
-    } catch (e) {
-      console.warn('Mute toggle note:', e);
-    }
-  };
-
   // Controls: Fullscreen Toggle
   const toggleFullscreen = () => {
     const el = playerWrapperRef.current;
@@ -467,25 +404,12 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
       {/* 1. VIDEO PLAYER WRAPPER */}
       <div
         ref={playerWrapperRef}
-        className={`relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-border shadow-2xl group ${
+        className={`relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-border shadow-2xl ${
           isFullscreen ? '!rounded-none !border-none !h-screen !w-screen !aspect-auto' : ''
         }`}
       >
         {/* Actual YouTube IFrame Host */}
         <div ref={containerRef} id="peace-yt-player" className="w-full h-full" />
-
-        {/* Big Central Play Overlay when Paused */}
-        {!isPlaying && isPlayerReady && !errorMessage && (
-          <button
-            onClick={togglePlay}
-            aria-label="Play video"
-            className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 hover:bg-black/30 transition-all group-hover:scale-100"
-          >
-            <div className="w-20 h-20 rounded-full bg-primary/95 text-white flex items-center justify-center shadow-2xl transform transition-transform group-hover:scale-110 active:scale-95">
-              <Play className="w-9 h-9 fill-white ml-1" />
-            </div>
-          </button>
-        )}
 
         {/* Error Fallback Banner */}
         {errorMessage && (
@@ -498,14 +422,14 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
           </div>
         )}
 
-        {/* Sync Status Badge Overlay */}
-        <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
+        {/* Sync Status Badge Overlay (Top-Right) */}
+        <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 pointer-events-none">
           {partnerPresence ? (
             <div
-              className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md border ${
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md border shadow-lg ${
                 syncStatus === 'synced'
-                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
-                  : 'bg-amber-500/20 border-amber-500/30 text-amber-300 animate-pulse'
+                  ? 'bg-emerald-500/30 border-emerald-500/40 text-emerald-300'
+                  : 'bg-amber-500/30 border-amber-500/40 text-amber-300 animate-pulse'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-current" />
@@ -514,93 +438,55 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
               </span>
             </div>
           ) : (
-            <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md bg-zinc-900/80 border border-zinc-700/60 text-zinc-400">
+            <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md bg-zinc-900/80 border border-zinc-700/60 text-zinc-300 shadow-lg">
               <span className="w-2 h-2 rounded-full bg-zinc-500" />
               <span>Waiting for partner</span>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Custom Peace Floating Controls */}
-        <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent flex flex-col space-y-2 opacity-95 group-hover:opacity-100 transition-opacity">
-          {/* Progress Seek Bar */}
-          <input
-            type="range"
-            min="0"
-            max={duration || 100}
-            step="0.1"
-            value={currentTime}
-            onChange={handleSeek}
-            className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary hover:h-2 transition-all"
-          />
+      {/* 2. COMPACT PLAYER TOOLBAR & QUICK CONTROLS */}
+      <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 backdrop-blur-sm shadow-md">
+        <div className="flex items-center space-x-3 text-xs text-zinc-300">
+          <span className="font-mono text-zinc-400 text-xs">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+          <span className="text-zinc-600">|</span>
+          <span className="text-[11px] text-zinc-400">
+            {isPlaying ? '● Playing' : '❚❚ Paused'}
+          </span>
+        </div>
 
-          <div className="flex items-center justify-between text-xs text-white">
-            <div className="flex items-center space-x-3">
-              {/* Play / Pause Button */}
-              <button
-                onClick={togglePlay}
-                type="button"
-                className="w-9 h-9 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-all shadow-md active:scale-95"
-                title={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isPlaying ? (
-                  <Pause className="w-4 h-4 fill-white" />
-                ) : (
-                  <Play className="w-4 h-4 fill-white ml-0.5" />
-                )}
-              </button>
+        <div className="flex items-center space-x-2">
+          {/* Force Sync to Partner Button */}
+          <button
+            onClick={() => broadcastSyncRequest()}
+            type="button"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/80 text-xs font-semibold text-zinc-200 transition-all hover:border-primary/50 shadow-sm active:scale-95"
+            title="Force Sync with Partner"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-primary" />
+            <span className="hidden sm:inline">Sync to Partner</span>
+          </button>
 
-              {/* Mute / Unmute Button */}
-              <button
-                onClick={toggleMute}
-                type="button"
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                  isMuted
-                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30'
-                    : 'bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white'
-                }`}
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </button>
-
-              {/* Time Display */}
-              <span className="font-mono text-zinc-300 text-[11px]">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Sync to Partner Button */}
-              <button
-                onClick={() => broadcastSyncRequest()}
-                type="button"
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-[11px] font-semibold text-zinc-200 transition-all hover:border-primary/50"
-                title="Force Sync with Partner"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-primary" />
-                <span className="hidden sm:inline">Sync to Partner</span>
-              </button>
-
-              {/* Fullscreen Button */}
-              <button
-                onClick={toggleFullscreen}
-                type="button"
-                className="w-8 h-8 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white flex items-center justify-center transition-all hover:border-primary/50"
-                title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-              >
-                {isFullscreen ? (
-                  <Minimize className="w-4 h-4 text-primary" />
-                ) : (
-                  <Maximize className="w-4 h-4 text-zinc-300" />
-                )}
-              </button>
-            </div>
-          </div>
+          {/* Fullscreen Toggle Button */}
+          <button
+            onClick={toggleFullscreen}
+            type="button"
+            className="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/80 text-zinc-300 hover:text-white flex items-center justify-center transition-all hover:border-primary/50 shadow-sm active:scale-95"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+          >
+            {isFullscreen ? (
+              <Minimize className="w-4 h-4 text-primary" />
+            ) : (
+              <Maximize className="w-4 h-4 text-zinc-300" />
+            )}
+          </button>
         </div>
       </div>
 
-      {/* 2. QUICK REACTION BAR */}
+      {/* 3. QUICK REACTION BAR */}
       <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900/40 border border-zinc-800 backdrop-blur-sm">
         <div className="flex items-center space-x-2 text-xs text-zinc-400">
           <Sparkles className="w-4 h-4 text-primary shrink-0" />
