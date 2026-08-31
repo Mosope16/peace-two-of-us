@@ -196,3 +196,4 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
     </div>
   );
 }
+

@@ -27,7 +27,7 @@ export function subscribeToCoupleRealtime(coupleId: string, onPartnerConnected: 
   if (!isSupabaseConfigured() || !coupleId) return () => {};
 
   const channel = supabase
-    .channel(`couple-room-${coupleId}`)
+    .channel(`couple-pairing-${coupleId}-${Math.random().toString(36).substring(2, 9)}`)
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'couples', filter: `id=eq.${coupleId}` },

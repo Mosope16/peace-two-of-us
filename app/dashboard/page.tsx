@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Gamepad2, ArrowRight } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
-import { subscribeToCoupleRealtime } from '@/lib/supabase';
-import { triggerLoveConfetti } from '@/lib/utils';
 import { HeroSection } from '@/components/dashboard/hero-section';
 import { CountdownsSection } from '@/components/dashboard/countdowns-section';
 import { MoodSection } from '@/components/dashboard/mood-section';
@@ -13,18 +11,7 @@ import { MemoriesLettersSection } from '@/components/dashboard/memories-letters-
 import { WatchTogetherBanner } from '@/components/dashboard/watch-together-banner';
 
 export default function DashboardPage() {
-  const { couple, partner, updatePartnerProfile } = useLDRStore();
-
-  useEffect(() => {
-    if (couple && couple.id) {
-      const unsubscribe = subscribeToCoupleRealtime(couple.id, (partnerUser) => {
-        updatePartnerProfile(partnerUser);
-        triggerLoveConfetti();
-      });
-      return () => unsubscribe();
-    }
-  }, [couple?.id, updatePartnerProfile]);
-
+  const { partner } = useLDRStore();
   return (
     <div className="space-y-12 pb-16">
       

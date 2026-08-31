@@ -125,3 +125,4 @@ export function WatchChat({ sessionId }: WatchChatProps) {
     </div>
   );
 }
+
