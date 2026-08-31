@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useLDRStore } from '@/lib/store';
 import { syncClerkUser } from '@/lib/clerk-sync';
+import type { User } from '@/types';
 
 const PUBLIC_ROUTES = ['/login', '/', '/sso-callback'];
 
@@ -34,6 +35,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           if (!isCancelled) {
             setSyncError(err.message);
             console.error('Auth sync error:', err.message);
+            if (!isAuthenticated && user) {
+              const fallbackAppUser: User = {
+                id: user.id,
+                name: user.fullName || user.firstName || 'User',
+                email: user.primaryEmailAddress?.emailAddress || '',
+                avatar: user.imageUrl || '',
+                created_at: new Date().toISOString(),
+              };
+              setAuthenticatedUser(fallbackAppUser, null, {
+                id: `couple-${user.id}`,
+                partner_one: fallbackAppUser,
+                partner_two: null,
+                relationship_start_date: new Date().toISOString(),
+                invite_code: 'LDR-PEACE',
+                is_connected: false,
+              });
+            }
           }
         });
 
