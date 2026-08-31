@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Heart,
-  Image as ImageIcon,
   Mail,
   Clock,
   CheckSquare,
@@ -40,7 +39,6 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Dashboard', href: '/dashboard', icon: Heart },
     { name: 'Games', href: '/games', icon: Gamepad2 },
-    { name: 'Memories', href: '/memories', icon: ImageIcon },
     { name: 'Love Letters', href: '/letters', icon: Mail },
     { name: 'Timeline', href: '/timeline', icon: Clock },
     { name: 'Countdowns', href: '/countdowns', icon: Calendar },

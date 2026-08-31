@@ -36,7 +36,7 @@ export default function DashboardPage() {
         <CountdownsSection />
       </div>
 
-      {/* 3. RECENT MEMORY & LOVE LETTER HIGHLIGHT */}
+      {/* 3. LOVE LETTERS & BUCKET LIST HIGHLIGHT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <MemoriesLettersSection />
       </div>

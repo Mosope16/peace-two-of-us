@@ -49,7 +49,8 @@ export interface LoveLetter {
   title: string;
   content: string;
   unlock_date?: string; // ISO date string
-  created_by: string; // user_id
+  letter_style?: string;
+  created_by?: string; // user_id
   created_at: string;
   is_read?: boolean;
 }
@@ -70,7 +71,7 @@ export interface BucketItem {
   completed: boolean;
   completed_at?: string;
   category?: 'travel' | 'date' | 'life' | 'creative';
-  created_by: string;
+  created_by?: string;
   created_at: string;
 }
 
@@ -81,7 +82,7 @@ export interface Countdown {
   target_date: string;
   category?: 'anniversary' | 'visit' | 'birthday' | 'graduation' | 'trip' | 'custom';
   icon?: string;
-  created_by: string;
+  created_by?: string;
   created_at: string;
 }
 

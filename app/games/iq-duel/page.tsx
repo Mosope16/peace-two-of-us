@@ -250,7 +250,7 @@ export default function IQDuelPage() {
             ) : (
               <button
                 onClick={() => setIsGameOver(true)}
-                className="px-6 py-2.5 rounded-xl hover:hover:text-white font-black text-xs shadow-lg transition-all"
+                className="px-6 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-black text-xs shadow-lg transition-all"
               >
                 👑 Submit Duel & Reveal Results!
               </button>

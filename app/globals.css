@@ -13,7 +13,6 @@
   
   --font-outfit: var(--font-outfit), system-ui, sans-serif;
   --font-inter: var(--font-inter), system-ui, sans-serif;
-  --font-inter-tight: var(--font-inter-tight), system-ui, sans-serif;
 }
 
 @layer base {

@@ -1,6 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import confetti from "canvas-confetti";
 import { MoodOption, MoodType } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
@@ -27,21 +26,22 @@ export function calculateDaysTogether(startDateStr: string): number {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-export function calculateCountdownDays(targetDateStr: string): { days: number; hours: number; minutes: number; isPassed: boolean } {
-  if (!targetDateStr) return { days: 0, hours: 0, minutes: 0, isPassed: true };
+export function calculateCountdownDays(targetDateStr: string): { days: number; hours: number; minutes: number; seconds: number; isPassed: boolean } {
+  if (!targetDateStr) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPassed: true };
   const target = new Date(targetDateStr);
   const now = new Date();
   const diffMs = target.getTime() - now.getTime();
 
   if (diffMs <= 0) {
-    return { days: 0, hours: 0, minutes: 0, isPassed: true };
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isPassed: true };
   }
 
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-  return { days, hours, minutes, isPassed: false };
+  return { days, hours, minutes, seconds, isPassed: false };
 }
 
 export function formatDate(dateStr: string, options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }): string {
@@ -71,10 +71,13 @@ export function isLetterLocked(unlockDateStr?: string): boolean {
 }
 
 export function triggerLoveConfetti() {
-  confetti({
-    particleCount: 80,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ['#f43f5e', '#ec4899', '#fb7185', '#fda4af', '#fbbf24']
+  import('canvas-confetti').then((module) => {
+    const confetti = module.default;
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#f43f5e', '#ec4899', '#fb7185', '#fda4af', '#fbbf24']
+    });
   });
 }

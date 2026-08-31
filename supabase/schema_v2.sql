@@ -257,7 +257,24 @@ DROP TRIGGER IF EXISTS trigger_new_letter ON public.love_letters;
 CREATE TRIGGER trigger_new_letter
   AFTER INSERT ON public.love_letters
   FOR EACH ROW EXECUTE FUNCTION notify_new_letter();
+-- Trigger: New Countdown
+CREATE OR REPLACE FUNCTION notify_new_countdown() RETURNS TRIGGER AS $$
+DECLARE
+  partner UUID;
+BEGIN
+  partner := get_partner_id(NEW.created_by, NEW.couple_id);
+  IF partner IS NOT NULL THEN
+    INSERT INTO public.notifications (recipient_id, actor_id, type, entity_type, entity_id, metadata)
+    VALUES (partner, NEW.created_by, 'created', 'countdown', NEW.id::text, jsonb_build_object('title', NEW.title, 'target_date', NEW.target_date, 'category', NEW.category));
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trigger_new_countdown ON public.countdowns;
+CREATE TRIGGER trigger_new_countdown
+  AFTER INSERT ON public.countdowns
+  FOR EACH ROW EXECUTE FUNCTION notify_new_countdown();
 -- Trigger: New Game Invitation
 CREATE OR REPLACE FUNCTION notify_new_game_invite() RETURNS TRIGGER AS $$
 BEGIN

@@ -25,10 +25,10 @@ type CoupleRow = {
   partner_two_data?: UserRow | null;
 };
 
-function syncError(message: string, error: unknown) {
+function syncError(message: string, error: any) {
   console.error(`[auth/sync-user] ${message}`, error);
-  const detail = error instanceof Error ? error.message : message;
-  return NextResponse.json({ error: detail }, { status: 500 });
+  const detail = error?.message || error?.details || message;
+  return NextResponse.json({ error: `${message} (${detail})` }, { status: 500 });
 }
 
 import { stableUuidFromClerkId } from '@/lib/server/auth-utils';

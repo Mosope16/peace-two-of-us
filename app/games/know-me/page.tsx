@@ -19,7 +19,7 @@ import {
 import { LiveCursors } from '@/components/live-cursors';
 import { supabase } from '@/lib/supabase';
 
-export default function KnowMeQuizPage() {
+function KnowMeQuizContent() {
   const { currentUser, partner } = useLDRStore();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -425,3 +425,18 @@ export default function KnowMeQuizPage() {
     </div>
   );
 }
+
+export default function KnowMeQuizPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+        </div>
+      }
+    >
+      <KnowMeQuizContent />
+    </React.Suspense>
+  );
+}
+

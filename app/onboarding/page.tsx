@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Heart, ArrowRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -37,7 +38,19 @@ export default function OnboardingPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to join couple space');
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      try {
+        if (data?.couple?.id) {
+          const roomChannel = supabase.channel(`couple-room-${data.couple.id}`);
+          roomChannel.send({
+            type: 'broadcast',
+            event: 'partner_connected',
+            payload: { coupleId: data.couple.id },
+          });
+        }
+      } catch (err) {
+        console.warn('Broadcast partner connected note:', err);
+      }
       queryClient.invalidateQueries(); // Invalidate all dependencies
       router.replace('/dashboard');
     },

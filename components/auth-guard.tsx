@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useLDRStore } from '@/lib/store';
-import { Loader2, Lock } from 'lucide-react';
 import { syncClerkUser } from '@/lib/clerk-sync';
 
 const PUBLIC_ROUTES = ['/login', '/', '/sso-callback'];
@@ -34,6 +33,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         .catch((err: Error) => {
           if (!isCancelled) {
             setSyncError(err.message);
+            console.error('Auth sync error:', err.message);
           }
         });
 
@@ -42,13 +42,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       };
     }
 
-    if (!isPublic) {
+    if (!isPublic && !isSignedIn && isLoaded) {
       logoutUser();
       router.replace('/login');
     }
   }, [isLoaded, isSignedIn, pathname, router, setAuthenticatedUser, logoutUser, user]);
 
-  const isPublic = PUBLIC_ROUTES.includes(pathname);
   const isOnboarding = pathname === '/onboarding';
 
   // Force onboarding if logged in but no couple
@@ -62,65 +61,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, currentUser, isOnboarding, router]);
 
-  if (!isLoaded) {
-    return null;
-  }
-
-  if (isSignedIn && !isAuthenticated && !isPublic) {
-    if (syncError) {
-      return (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-2">
-            <Lock className="w-8 h-8" />
-          </div>
-          <h2 className="text-xl font-bold text-white">Connection Error</h2>
-          <p className="text-xs text-zinc-400 max-w-sm">
-            {syncError}
-          </p>
-          <div className="flex space-x-3 pt-4">
-            <button
-              onClick={() => {
-                setSyncError('');
-              }}
-              className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold transition-colors"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => {
-                logoutUser();
-                router.replace('/login');
-              }}
-              className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-border text-xs font-semibold transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
-        <p className="text-xs text-zinc-400">Preparing your private space...</p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated && !isPublic) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-border flex items-center justify-center text-rose-400 mb-2">
-          <Lock className="w-8 h-8 animate-pulse" />
-        </div>
-        <h2 className="text-2xl font-bold text-white">Private Space Locked 🔒</h2>
-        <p className="text-xs text-zinc-400 max-w-sm">
-          Please sign in or create an account to access your private couple space.
-        </p>
-      </div>
-    );
-  }
+  // We no longer block rendering of children while syncing.
+  // The middleware already protects routes, and Zustand persist hydrates UI immediately.
+  // This drastically improves FCP (First Contentful Paint) and TTI (Time to Interactive).
 
   return <>{children}</>;
 }

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Settings, Heart, Copy, Check, Calendar, ShieldCheck, Database, Sparkles, User, RefreshCw } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function SettingsPage() {
   const { couple, currentUser, partner, updateCoupleStartDate } = useLDRStore();
@@ -20,10 +20,26 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSaveStartDate = (e: React.FormEvent) => {
+  const handleSaveStartDate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!startDate) return;
-    updateCoupleStartDate(new Date(startDate).toISOString());
+    const isoDate = new Date(startDate).toISOString();
+    updateCoupleStartDate(isoDate);
+
+    if (isSupabaseConfigured() && couple?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(couple.id)) {
+      try {
+        await supabase.from('couples').update({ relationship_start_date: isoDate }).eq('id', couple.id);
+        const roomChannel = supabase.channel(`couple-room-${couple.id}`);
+        roomChannel.send({
+          type: 'broadcast',
+          event: 'partner_connected',
+          payload: { relationship_start_date: isoDate },
+        });
+      } catch (err) {
+        console.warn('Supabase update relationship date warning:', err);
+      }
+    }
+
     setSavedMessage(true);
     setTimeout(() => setSavedMessage(false), 3000);
   };

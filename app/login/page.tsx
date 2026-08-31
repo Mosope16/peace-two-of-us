@@ -121,7 +121,7 @@ export default function LoginPage() {
           type="button"
           onClick={handleGoogleAuth}
           disabled={isLoading}
-          className="w-full py-3.5 rounded-xl hover:hover:text-white font-bold text-xs shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.02] disabled:opacity-50"
+          className="w-full py-3.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.02] disabled:opacity-50"
         >
           {isLoading ? (
             <span className="flex items-center space-x-2">

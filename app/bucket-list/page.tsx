@@ -39,7 +39,7 @@ export default function BucketListPage() {
       title,
       description,
       category,
-      created_by: currentUser.id,
+      created_by: currentUser?.id,
     });
 
     setTitle('');
@@ -72,7 +72,7 @@ export default function BucketListPage() {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-5 py-2.5 rounded-xl hover:hover:text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105"
+            className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center space-x-2 transition-transform hover:scale-105"
           >
             <Plus className="w-4 h-4" />
             <span>Add Bucket Goal</span>

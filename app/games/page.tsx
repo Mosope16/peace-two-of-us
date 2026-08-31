@@ -63,9 +63,9 @@ export default function GamesHubPage() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header Banner */}
-      <div className="soft-card p-10 relative overflow-hidden shadow-lg">
+      <div className="soft-card p-6 sm:p-8 md:p-10 relative overflow-hidden shadow-lg">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <Gamepad2 className="w-64 h-64 text-primary" />
+          <Gamepad2 className="w-48 h-48 sm:w-64 sm:h-64 text-primary" />
         </div>
 
         <div className="relative z-10 space-y-4 max-w-2xl">
@@ -74,11 +74,11 @@ export default function GamesHubPage() {
             <span>Couple Games &amp; Duels</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white">
             Play, Compete &amp; Discover More About <span className="text-primary">Each Other</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-zinc-400 leading-relaxed">
             Fun, competitive, and intimate mini-games designed specifically for long-distance couples. Test how well you know {partner?.name.split(' ')[0]}, duel in timed intelligence tests, and solve riddles together.
           </p>
         </div>

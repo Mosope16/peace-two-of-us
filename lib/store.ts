@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, Couple, Memory, LoveLetter, MoodLog, BucketItem, Countdown, MoodType, IQDuelAnswer, LiveGameRoom, QuizCategoryId } from '@/types';
+import { User, Couple, LoveLetter, MoodLog, BucketItem, Countdown, MoodType, IQDuelAnswer, LiveGameRoom, QuizCategoryId } from '@/types';
 interface LDRState {
   isAuthenticated: boolean;
   currentUser: User;
   partner: User;
   couple: Couple;
-  // (Server state like memories, loveLetters, etc. are now handled by React Query)
+  // (Server state like loveLetters, etc. are now handled by React Query)
   activePartnerId: string;
 
   // Games State
