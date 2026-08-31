@@ -129,7 +129,7 @@ export async function POST() {
     return syncError('Could not load couple profile.', coupleFetchError);
   }
 
-  let coupleRow = (existingCouples?.[0] || null) as CoupleRow | null;
+  const coupleRow = (existingCouples?.[0] || null) as CoupleRow | null;
 
   if (coupleRow && coupleRow.id !== appUser.couple_id) {
     const { error: linkUserError } = await supabase

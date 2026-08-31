@@ -83,61 +83,13 @@ function KnowMeQuizContent() {
     };
   }, [sessionId, currentUser?.id]);
 
-  // Handle Question Timer
-  useEffect(() => {
-    if (!session || session.status !== 'playing' || !sessionQuestions.length) {
-      return;
-    }
-    
-    // Reset local answer and timer on question change
-    setLocalAnswer(null);
-    setTimerSeconds(60);
-
-    const interval = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          // If time expires, force submit a default answer
-          forceSubmitDefault();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [session?.current_question_index, session?.status]);
-
-  // Update presence with locked status
-  useEffect(() => {
-    if (presenceChannel.current && currentUser) {
-      presenceChannel.current.track({
-        user_id: currentUser.id,
-        online_at: new Date().toISOString(),
-        locked_in: !!localAnswer,
-      });
-    }
-  }, [localAnswer, currentUser?.id]);
-
-  if (!currentUser) return null;
-
   const currentQIndex = session?.current_question_index ?? 0;
   const currentQuestion = sessionQuestions[currentQIndex];
 
   // Helper to determine my role for the current question
-  const isMyTurnToAnswer = currentQuestion?.subjectUserId === currentUser.id;
-  const isMyTurnToGuess = currentQuestion?.guesserUserId === currentUser.id;
+  const isMyTurnToAnswer = currentQuestion?.subjectUserId === currentUser?.id;
+  const isMyTurnToGuess = currentQuestion?.guesserUserId === currentUser?.id;
   const myRole = isMyTurnToAnswer ? 'subject' : 'guesser';
-
-  const handleProposeCategory = (categoryId: string) => {
-    if (presenceChannel.current && currentUser) {
-      presenceChannel.current.track({
-        user_id: currentUser.id,
-        selectedCategory: categoryId,
-        online_at: new Date().toISOString(),
-      });
-    }
-  };
 
   const handleSelectOption = (option: string) => {
     setLocalAnswer(option);
@@ -165,6 +117,49 @@ function KnowMeQuizContent() {
       totalQuestions: sessionQuestions.length
     });
   };
+
+  const handleProposeCategory = (categoryId: string) => {
+    if (presenceChannel.current && currentUser) {
+      presenceChannel.current.track({
+        user_id: currentUser.id,
+        selectedCategory: categoryId,
+        online_at: new Date().toISOString(),
+      });
+    }
+  };
+
+  // Handle Question Timer
+  useEffect(() => {
+    if (!session || session.status !== 'playing' || !sessionQuestions.length) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [session?.current_question_index, session?.status, sessionQuestions.length, session]);
+
+  // Update presence with locked status
+  useEffect(() => {
+    if (presenceChannel.current && currentUser) {
+      presenceChannel.current.track({
+        user_id: currentUser.id,
+        online_at: new Date().toISOString(),
+        locked_in: !!localAnswer,
+      });
+    }
+  }, [localAnswer, currentUser]);
+
+  if (!currentUser) return null;
+
 
   const renderCategorySelection = () => (
     <>

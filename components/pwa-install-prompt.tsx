@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, X, Share2, PlusSquare, Smartphone, Sparkles, Check } from 'lucide-react';
+import { Download, X, Share2, PlusSquare, Smartphone } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -11,38 +11,37 @@ interface BeforeInstallPromptEvent extends Event {
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isStandalone] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      ('standalone' in window.navigator && Boolean((window.navigator as unknown as { standalone?: boolean }).standalone))
+    );
+  });
   const [showPrompt, setShowPrompt] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    // 1. Check if already running in standalone PWA mode
-    const isRunningStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
+    if (isStandalone) return;
 
-    if (isRunningStandalone) {
-      setIsStandalone(true);
-      return;
-    }
-
-    // 2. Check if user dismissed recently (24 hour cooldown)
+    // Check if user dismissed recently (24 hour cooldown)
     const dismissedAt = localStorage.getItem('ldr_pwa_dismissed');
     if (dismissedAt) {
       const hoursSinceDismiss = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60);
       if (hoursSinceDismiss < 24) return;
     }
 
-    // 3. Detect iOS Safari
+    // Detect iOS Safari
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
     const isSafari = /safari/.test(userAgent) && !/crios|fxios|optios/.test(userAgent);
 
-    if (isAppleDevice && isSafari && !isRunningStandalone) {
-      setIsIOS(true);
-      // Show prompt after 3 seconds of browsing
-      const timer = setTimeout(() => setShowPrompt(true), 3000);
+    if (isAppleDevice && isSafari) {
+      const timer = setTimeout(() => {
+        setIsIOS(true);
+        setShowPrompt(true);
+      }, 3000);
       return () => clearTimeout(timer);
     }
 
