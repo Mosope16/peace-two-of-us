@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Settings, Heart, Copy, Check, Calendar, ShieldCheck, Database, Sparkles, User, RefreshCw } from 'lucide-react';
+import { Settings, Heart, Copy, Check, Calendar, ShieldCheck, Database, Sparkles, User, RefreshCw, Smartphone, Download } from 'lucide-react';
 import { useLDRStore } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -183,6 +183,44 @@ export default function SettingsPage() {
           <p className="text-[11px] text-zinc-500 pt-2 border-t border-zinc-800">
             To connect a live Supabase project, populate <code className="text-rose-300">NEXT_PUBLIC_SUPABASE_URL</code> and <code className="text-rose-300">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code className="text-rose-300">.env.local</code>.
           </p>
+        </div>
+      </div>
+
+      {/* 5. Install Web App (PWA) */}
+      <div className="soft-card rounded-3xl p-6 sm:p-8 border border-border space-y-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-border flex items-center justify-center text-purple-400">
+            <Smartphone className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Install Peace on Your Device</h2>
+            <p className="text-xs text-zinc-400">Add Peace as a standalone home-screen app on iOS, Android, macOS, or Windows.</p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3 text-xs text-zinc-300">
+          <div className="flex items-start space-x-2">
+            <Sparkles className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <p>Running as an installed app gives you full screen view without browser address bars, instant startup, and real-time alerts.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px]">
+            <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 space-y-1.5">
+              <p className="font-bold text-white flex items-center space-x-1.5">
+                <span>📱 iPhone / iPad (Safari)</span>
+              </p>
+              <p className="text-zinc-400 leading-relaxed">
+                Tap the Share icon in Safari, scroll down and tap <strong className="text-white">&ldquo;Add to Home Screen&rdquo;</strong>.
+              </p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 space-y-1.5">
+              <p className="font-bold text-white flex items-center space-x-1.5">
+                <span>🤖 Android / Chrome / Edge</span>
+              </p>
+              <p className="text-zinc-400 leading-relaxed">
+                Tap the browser menu ⋮ and select <strong className="text-white">&ldquo;Install App&rdquo;</strong> or <strong className="text-white">&ldquo;Add to Home Screen&rdquo;</strong>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
