@@ -207,3 +207,91 @@ export interface GameAnswer {
   created_at: string;
 }
 
+// WATCH TOGETHER TYPES
+export interface WatchSession {
+  id: string;
+  couple_id: string;
+  created_by: string;
+  media_type: 'youtube';
+  media_id: string;
+  title: string;
+  thumbnail_url?: string;
+  status: 'created' | 'active' | 'ended';
+  current_position: number;
+  is_playing: boolean;
+  last_action_at: string;
+  created_at: string;
+  ended_at?: string;
+}
+
+export interface WatchMessage {
+  id: string;
+  watch_session_id: string;
+  user_id: string;
+  user_name?: string;
+  user_avatar?: string;
+  message: string;
+  created_at: string;
+}
+
+export type WatchPlaybackEvent =
+  | {
+      type: 'PLAY';
+      position: number;
+      sent_at: number;
+      sequence: number;
+      sender_id: string;
+    }
+  | {
+      type: 'PAUSE';
+      position: number;
+      sent_at: number;
+      sequence: number;
+      sender_id: string;
+    }
+  | {
+      type: 'SEEK';
+      position: number;
+      sent_at: number;
+      sequence: number;
+      sender_id: string;
+    }
+  | {
+      type: 'SYNC_REQUEST';
+      sent_at: number;
+      sender_id: string;
+    }
+  | {
+      type: 'SYNC_RESPONSE';
+      position: number;
+      is_playing: boolean;
+      sent_at: number;
+      sequence: number;
+      sender_id: string;
+      responder_id: string;
+      requester_id: string;
+    }
+  | {
+      type: 'VIDEO_CHANGED';
+      media_id: string;
+      title: string;
+      sent_at: number;
+      sequence: number;
+      sender_id: string;
+    }
+  | {
+      type: 'REACTION';
+      reaction: string;
+      sent_at: number;
+      sender_id: string;
+    };
+
+export interface WatchPresenceState {
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
+  status: 'watching' | 'paused' | 'buffering';
+  current_position: number;
+  online_at: string;
+}
+

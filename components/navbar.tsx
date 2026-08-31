@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Gamepad2,
   LogIn,
+  Tv,
 } from 'lucide-react';
 import { useAuth, useClerk } from '@clerk/nextjs';
 import { useLDRStore } from '@/lib/store';
@@ -38,6 +39,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Dashboard', href: '/dashboard', icon: Heart },
+    { name: 'Watch Together', href: '/watch', icon: Tv },
     { name: 'Games', href: '/games', icon: Gamepad2 },
     { name: 'Love Letters', href: '/letters', icon: Mail },
     { name: 'Timeline', href: '/timeline', icon: Clock },

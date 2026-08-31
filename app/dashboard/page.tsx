@@ -10,6 +10,7 @@ import { HeroSection } from '@/components/dashboard/hero-section';
 import { CountdownsSection } from '@/components/dashboard/countdowns-section';
 import { MoodSection } from '@/components/dashboard/mood-section';
 import { MemoriesLettersSection } from '@/components/dashboard/memories-letters-section';
+import { WatchTogetherBanner } from '@/components/dashboard/watch-together-banner';
 
 export default function DashboardPage() {
   const { couple, partner, updatePartnerProfile } = useLDRStore();
@@ -30,18 +31,21 @@ export default function DashboardPage() {
       {/* 1. HERO COUPLE BANNER & DAYS TOGETHER COUNTER */}
       <HeroSection />
 
-      {/* 2. CORE DASHBOARD GRID */}
+      {/* 2. WATCH TOGETHER LIVE BANNER */}
+      <WatchTogetherBanner />
+
+      {/* 3. CORE DASHBOARD GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <MoodSection />
         <CountdownsSection />
       </div>
 
-      {/* 3. LOVE LETTERS & BUCKET LIST HIGHLIGHT */}
+      {/* 4. LOVE LETTERS & BUCKET LIST HIGHLIGHT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <MemoriesLettersSection />
       </div>
 
-      {/* 4. COUPLE GAMES HUB HIGHLIGHT BANNER */}
+      {/* 5. COUPLE GAMES HUB HIGHLIGHT BANNER */}
       <section className="soft-card soft-card-hover rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center space-x-5">
           <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg flex-shrink-0">
