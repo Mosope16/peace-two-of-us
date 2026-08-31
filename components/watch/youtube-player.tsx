@@ -197,11 +197,15 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     function createPlayer() {
       if (!containerRef.current || isCancelled) return;
 
+      // Create a fresh, pristine mount target inside the container to prevent DOM corruption across remounts
+      containerRef.current.innerHTML = '<div id="peace-yt-iframe-target" style="width:100%;height:100%;"></div>';
+
       try {
-        playerRef.current = new window.YT.Player('peace-yt-player', {
+        playerRef.current = new window.YT.Player('peace-yt-iframe-target', {
           height: '100%',
           width: '100%',
           videoId: session.media_id,
+          host: 'https://www.youtube-nocookie.com',
           playerVars: {
             autoplay: 0,
             controls: 1, // Standard interactive controls for reliable play/pause/seek
@@ -209,7 +213,6 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
             modestbranding: 1,
             playsinline: 1,
             enablejsapi: 1,
-            origin: typeof window !== 'undefined' ? window.location.origin : '',
           },
           events: {
             onReady: (event: any) => {
@@ -404,12 +407,12 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
       {/* 1. VIDEO PLAYER WRAPPER */}
       <div
         ref={playerWrapperRef}
-        className={`relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-border shadow-2xl ${
+        className={`relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-border shadow-2xl [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:border-0 ${
           isFullscreen ? '!rounded-none !border-none !h-screen !w-screen !aspect-auto' : ''
         }`}
       >
-        {/* Actual YouTube IFrame Host */}
-        <div ref={containerRef} id="peace-yt-player" className="w-full h-full" />
+        {/* Actual YouTube IFrame Host Container */}
+        <div ref={containerRef} className="absolute inset-0 w-full h-full" />
 
         {/* Error Fallback Banner */}
         {errorMessage && (
