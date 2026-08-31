@@ -25,7 +25,7 @@ interface YouTubePlayerProps {
 
 export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerProps) {
   const playerWrapperRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const playerTargetRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -171,6 +171,17 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     onSessionEnded: handleSessionEnded,
   });
 
+  // Keep references stable for lifecycle effect to avoid player restarts
+  const broadcastPlayRef = useRef(broadcastPlay);
+  broadcastPlayRef.current = broadcastPlay;
+  const broadcastPauseRef = useRef(broadcastPause);
+  broadcastPauseRef.current = broadcastPause;
+  const updatePlaybackMutationRef = useRef(updatePlaybackMutation);
+  updatePlaybackMutationRef.current = updatePlaybackMutation;
+  const safeGetCurrentTimeRef = useRef(safeGetCurrentTime);
+  safeGetCurrentTimeRef.current = safeGetCurrentTime;
+  const sessionInitialPosRef = useRef(session.current_position);
+
   // Track Fullscreen Change Events
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -192,105 +203,14 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
   // Load and initialize YouTube Player
   useEffect(() => {
-    let isCancelled = false;
+    let cancelled = false;
 
-    function createPlayer() {
-      if (!containerRef.current || isCancelled) return;
-
-      // Create a fresh, pristine mount target inside the container to prevent DOM corruption across remounts
-      containerRef.current.innerHTML = '<div id="peace-yt-iframe-target" style="width:100%;height:100%;"></div>';
-
-      try {
-        playerRef.current = new window.YT.Player('peace-yt-iframe-target', {
-          height: '100%',
-          width: '100%',
-          videoId: session.media_id,
-          host: 'https://www.youtube-nocookie.com',
-          playerVars: {
-            autoplay: 0,
-            controls: 1, // Standard interactive controls for reliable play/pause/seek
-            rel: 0,
-            modestbranding: 1,
-            playsinline: 1,
-            enablejsapi: 1,
-          },
-          events: {
-            onReady: (event: any) => {
-              if (isCancelled) return;
-              playerRef.current = event.target;
-              setIsPlayerReady(true);
-
-              const dur = typeof event.target.getDuration === 'function' ? event.target.getDuration() : 0;
-              if (dur > 0) setDuration(dur);
-
-              if (session.current_position > 0 && typeof event.target.seekTo === 'function') {
-                event.target.seekTo(session.current_position, true);
-              }
-            },
-            onStateChange: (event: any) => {
-              const playerState = event.data;
-              // YT.PlayerState: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
-              if (playerState === 1) {
-                setIsPlaying(true);
-                if (!isApplyingRemoteAction.current) {
-                  const pos = safeGetCurrentTime();
-                  broadcastPlay(pos);
-                  updatePlaybackMutation.mutate({
-                    sessionId: session.id,
-                    position: pos,
-                    isPlaying: true,
-                  });
-                }
-              } else if (playerState === 2 || playerState === 0) {
-                setIsPlaying(false);
-                if (!isApplyingRemoteAction.current) {
-                  const pos = safeGetCurrentTime();
-                  broadcastPause(pos);
-                  updatePlaybackMutation.mutate({
-                    sessionId: session.id,
-                    position: pos,
-                    isPlaying: false,
-                  });
-                }
-              }
-            },
-            onError: (event: any) => {
-              const code = event.data;
-              if (code === 101 || code === 150) {
-                setErrorMessage(
-                  'This YouTube video does not allow embedded playback. Please try another video URL.'
-                );
-              } else if (code === 100) {
-                setErrorMessage('YouTube video not found or removed.');
-              } else {
-                setErrorMessage('Playback error on YouTube video. Try another link.');
-              }
-            },
-          },
-        });
-      } catch (err) {
-        console.warn('YouTube Player initialization notice:', err);
+    const createPlayer = () => {
+      if (cancelled || !playerTargetRef.current || !window.YT?.Player) {
+        return;
       }
-    }
 
-    if (window.YT && window.YT.Player) {
-      createPlayer();
-    } else {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
-
-      window.onYouTubeIframeAPIReady = () => {
-        if (!isCancelled) {
-          createPlayer();
-        }
-      };
-    }
-
-    return () => {
-      isCancelled = true;
-      setIsPlayerReady(false);
+      // Destroy previous instance if it exists
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try {
           playerRef.current.destroy();
@@ -298,16 +218,155 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
           // ignore
         }
       }
+
+      playerRef.current = null;
+      setIsPlayerReady(false);
+      setErrorMessage(null);
+
+      try {
+        const player = new window.YT.Player(playerTargetRef.current, {
+          width: '100%',
+          height: '100%',
+          videoId: session.media_id,
+          host: 'https://www.youtube-nocookie.com',
+          playerVars: {
+            autoplay: 0,
+            controls: 1, // Standard interactive controls
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            enablejsapi: 1,
+            origin: typeof window !== 'undefined' ? window.location.origin : '',
+          },
+          events: {
+            onReady: (event: any) => {
+              if (cancelled) return;
+
+              console.log('[Peace Watch] YouTube player ready');
+              playerRef.current = event.target;
+              setIsPlayerReady(true);
+
+              const durationVal = typeof event.target.getDuration === 'function' ? event.target.getDuration() : 0;
+              if (durationVal > 0) {
+                setDuration(durationVal);
+              }
+
+              if (sessionInitialPosRef.current > 0 && typeof event.target.seekTo === 'function') {
+                event.target.seekTo(sessionInitialPosRef.current, true);
+              }
+            },
+
+            onStateChange: (event: any) => {
+              console.log('[Peace Watch] YouTube state:', event.data);
+              const state = event.data;
+
+              // YT.PlayerState: 1 = PLAYING
+              if (state === 1) {
+                setIsPlaying(true);
+
+                if (!isApplyingRemoteAction.current) {
+                  const pos = safeGetCurrentTimeRef.current();
+                  broadcastPlayRef.current(pos);
+                  updatePlaybackMutationRef.current.mutate({
+                    sessionId: session.id,
+                    position: pos,
+                    isPlaying: true,
+                  });
+                }
+              }
+
+              // YT.PlayerState: 2 = PAUSED, 0 = ENDED
+              if (state === 2 || state === 0) {
+                setIsPlaying(false);
+
+                if (!isApplyingRemoteAction.current) {
+                  const pos = safeGetCurrentTimeRef.current();
+                  broadcastPauseRef.current(pos);
+                  updatePlaybackMutationRef.current.mutate({
+                    sessionId: session.id,
+                    position: pos,
+                    isPlaying: false,
+                  });
+                }
+              }
+            },
+
+            onError: (event: any) => {
+              console.error('[Peace Watch] YouTube error:', event.data);
+
+              switch (event.data) {
+                case 2:
+                  setErrorMessage('Invalid YouTube video ID.');
+                  break;
+                case 5:
+                  setErrorMessage('HTML5 player error on this video.');
+                  break;
+                case 100:
+                  setErrorMessage('This YouTube video was not found or has been removed.');
+                  break;
+                case 101:
+                case 150:
+                  setErrorMessage(
+                    'This video does not allow embedded playback. Please choose another YouTube video.'
+                  );
+                  break;
+                default:
+                  setErrorMessage(`YouTube playback error (${event.data}).`);
+              }
+            },
+          },
+        });
+
+        playerRef.current = player;
+      } catch (error) {
+        console.error('[Peace Watch] Failed to create YouTube player:', error);
+        setErrorMessage('Unable to initialize the YouTube player.');
+      }
     };
-  }, [
-    session.media_id,
-    session.current_position,
-    session.id,
-    broadcastPlay,
-    broadcastPause,
-    updatePlaybackMutation,
-    safeGetCurrentTime,
-  ]);
+
+    const loadYouTubeAPI = () => {
+      if (cancelled) return;
+
+      if (window.YT?.Player) {
+        createPlayer();
+        return;
+      }
+
+      const existingScript = document.querySelector(
+        'script[src="https://www.youtube.com/iframe_api"]'
+      );
+
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://www.youtube.com/iframe_api';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+
+      window.onYouTubeIframeAPIReady = () => {
+        if (!cancelled) {
+          createPlayer();
+        }
+      };
+    };
+
+    loadYouTubeAPI();
+
+    return () => {
+      cancelled = true;
+      setIsPlayerReady(false);
+
+      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+        try {
+          playerRef.current.destroy();
+        } catch {
+          // ignore
+        }
+      }
+
+      playerRef.current = null;
+    };
+  }, [session.media_id, session.id]);
 
   // Track Playback Time, Presence, & Drift Calculation Loop
   useEffect(() => {
@@ -411,8 +470,8 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
           isFullscreen ? '!rounded-none !border-none !h-screen !w-screen !aspect-auto' : ''
         }`}
       >
-        {/* Actual YouTube IFrame Host Container */}
-        <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+        {/* Actual YouTube IFrame Host */}
+        <div ref={playerTargetRef} className="absolute inset-0 w-full h-full" />
 
         {/* Error Fallback Banner */}
         {errorMessage && (
