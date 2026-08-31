@@ -7,6 +7,12 @@ import { WatchSession, WatchMessage, WatchPlaybackEvent, WatchPresenceState } fr
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+// Helper to check valid UUID
+export function isValidUUID(str?: string | null): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
 // Helper to extract YouTube video ID from various URL formats
 export function extractYouTubeId(urlOrId: string): string | null {
   if (!urlOrId) return null;
@@ -29,7 +35,7 @@ export function useActiveWatchSession() {
   return useQuery<WatchSession | null>({
     queryKey: ['watch_session_active', coupleId],
     queryFn: async () => {
-      if (!coupleId || !isSupabaseConfigured()) return null;
+      if (!coupleId || !isValidUUID(coupleId) || !isSupabaseConfigured()) return null;
 
       const { data, error } = await supabase
         .from('watch_sessions')
@@ -46,7 +52,7 @@ export function useActiveWatchSession() {
       }
       return data as WatchSession | null;
     },
-    enabled: !!coupleId,
+    enabled: !!coupleId && isValidUUID(coupleId),
     refetchInterval: 5000, // Background sync fallback
   });
 }
@@ -56,7 +62,7 @@ export function useWatchSession(sessionId: string | undefined) {
   return useQuery<WatchSession | null>({
     queryKey: ['watch_session', sessionId],
     queryFn: async () => {
-      if (!sessionId || !isSupabaseConfigured()) return null;
+      if (!sessionId || !isValidUUID(sessionId) || !isSupabaseConfigured()) return null;
 
       const { data, error } = await supabase
         .from('watch_sessions')
@@ -70,7 +76,7 @@ export function useWatchSession(sessionId: string | undefined) {
       }
       return data as WatchSession | null;
     },
-    enabled: !!sessionId,
+    enabled: !!sessionId && isValidUUID(sessionId),
   });
 }
 
@@ -79,7 +85,7 @@ export function useWatchMessages(sessionId: string | undefined) {
   return useQuery<WatchMessage[]>({
     queryKey: ['watch_messages', sessionId],
     queryFn: async () => {
-      if (!sessionId || !isSupabaseConfigured()) return [];
+      if (!sessionId || !isValidUUID(sessionId) || !isSupabaseConfigured()) return [];
 
       const { data, error } = await supabase
         .from('watch_messages')
@@ -93,7 +99,7 @@ export function useWatchMessages(sessionId: string | undefined) {
       }
       return (data || []) as WatchMessage[];
     },
-    enabled: !!sessionId,
+    enabled: !!sessionId && isValidUUID(sessionId),
   });
 }
 
@@ -119,7 +125,7 @@ export function useCreateWatchSession() {
       const coupleId = couple?.id;
       const userId = currentUser?.id;
 
-      if (!coupleId || !userId) {
+      if (!coupleId || !isValidUUID(coupleId) || !userId) {
         throw new Error('No active couple found. Please connect with your partner.');
       }
 
@@ -167,6 +173,8 @@ export function useEndWatchSession() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
+      if (!sessionId || !isValidUUID(sessionId) || !isSupabaseConfigured()) return null;
+
       const { data, error } = await supabase
         .from('watch_sessions')
         .update({
@@ -181,6 +189,7 @@ export function useEndWatchSession() {
       return data as WatchSession;
     },
     onSuccess: (endedSession) => {
+      if (!endedSession) return;
       queryClient.setQueryData(['watch_session_active', endedSession.couple_id], null);
       queryClient.setQueryData(['watch_session', endedSession.id], endedSession);
     },
@@ -199,6 +208,8 @@ export function useUpdateWatchPlayback() {
       position: number;
       isPlaying: boolean;
     }) => {
+      if (!sessionId || !isValidUUID(sessionId) || !isSupabaseConfigured()) return;
+
       await supabase
         .from('watch_sessions')
         .update({
@@ -413,7 +424,7 @@ export function useWatchRealtimeEngine(
   );
 
   useEffect(() => {
-    if (!sessionId || !isSupabaseConfigured() || !currentUser?.id) return;
+    if (!sessionId || !isValidUUID(sessionId) || !isSupabaseConfigured() || !currentUser?.id) return;
 
     const channelName = `watch:${sessionId}`;
     const channel = supabase.channel(channelName, {
