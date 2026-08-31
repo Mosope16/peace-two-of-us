@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, RotateCcw, AlertTriangle, Sparkles } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  RotateCcw,
+  AlertTriangle,
+  Sparkles,
+  Maximize,
+  Minimize,
+} from 'lucide-react';
 import { WatchSession } from '@/types';
 import { useWatchRealtimeEngine, useUpdateWatchPlayback } from '@/lib/queries/useWatchTogether';
 
@@ -18,6 +28,7 @@ interface YouTubePlayerProps {
 }
 
 export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerProps) {
+  const playerWrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -25,6 +36,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Suppression flag to prevent infinite remote action loops
@@ -38,7 +50,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
         return playerRef.current.getCurrentTime() || 0;
       }
     } catch {
-      // ignore during iframe teardown
+      // ignore
     }
     return 0;
   }, []);
@@ -93,9 +105,10 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
   const handleSyncRequest = useCallback(() => {
     const pos = safeGetCurrentTime();
-    const playing = playerRef.current && typeof playerRef.current.getPlayerState === 'function'
-      ? playerRef.current.getPlayerState() === 1
-      : false;
+    const playing =
+      playerRef.current && typeof playerRef.current.getPlayerState === 'function'
+        ? playerRef.current.getPlayerState() === 1
+        : false;
     return { position: pos, isPlaying: playing };
   }, [safeGetCurrentTime]);
 
@@ -126,9 +139,12 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     }, 800);
   }, []);
 
-  const handleReaction = useCallback((reaction: string) => {
-    onReactionTriggered?.(reaction);
-  }, [onReactionTriggered]);
+  const handleReaction = useCallback(
+    (reaction: string) => {
+      onReactionTriggered?.(reaction);
+    },
+    [onReactionTriggered]
+  );
 
   const handleSessionEnded = useCallback(() => {
     if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
@@ -161,89 +177,122 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     onSessionEnded: handleSessionEnded,
   });
 
+  // Track Fullscreen Change Events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
   // Load YouTube IFrame API Script
   useEffect(() => {
     let isCancelled = false;
 
-    if (window.YT && window.YT.Player) {
-      initPlayer();
-      return;
+    function createPlayer() {
+      if (!containerRef.current || isCancelled) return;
+
+      try {
+        playerRef.current = new window.YT.Player('peace-yt-player', {
+          height: '100%',
+          width: '100%',
+          videoId: session.media_id,
+          playerVars: {
+            autoplay: 0,
+            controls: 0, // Custom Peace controls
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            enablejsapi: 1,
+            origin: typeof window !== 'undefined' ? window.location.origin : '',
+          },
+          events: {
+            onReady: (event: any) => {
+              if (isCancelled) return;
+              playerRef.current = event.target;
+              setIsPlayerReady(true);
+
+              const dur = typeof event.target.getDuration === 'function' ? event.target.getDuration() : 0;
+              if (dur > 0) setDuration(dur);
+
+              if (typeof event.target.isMuted === 'function') {
+                setIsMuted(event.target.isMuted());
+              }
+
+              if (session.current_position > 0 && typeof event.target.seekTo === 'function') {
+                event.target.seekTo(session.current_position, true);
+              }
+            },
+            onStateChange: (event: any) => {
+              const playerState = event.data;
+              // YT.PlayerState: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
+              if (playerState === 1) {
+                setIsPlaying(true);
+                if (!isApplyingRemoteAction.current) {
+                  const pos = safeGetCurrentTime();
+                  broadcastPlay(pos);
+                  updatePlaybackMutation.mutate({
+                    sessionId: session.id,
+                    position: pos,
+                    isPlaying: true,
+                  });
+                }
+              } else if (playerState === 2 || playerState === 0) {
+                setIsPlaying(false);
+                if (!isApplyingRemoteAction.current) {
+                  const pos = safeGetCurrentTime();
+                  broadcastPause(pos);
+                  updatePlaybackMutation.mutate({
+                    sessionId: session.id,
+                    position: pos,
+                    isPlaying: false,
+                  });
+                }
+              }
+            },
+            onError: (event: any) => {
+              const code = event.data;
+              if (code === 101 || code === 150) {
+                setErrorMessage(
+                  'This YouTube video does not allow embedded playback. Please try another video.'
+                );
+              } else if (code === 100) {
+                setErrorMessage('YouTube video not found or removed.');
+              } else {
+                setErrorMessage('Playback error on YouTube video. Try another link.');
+              }
+            },
+          },
+        });
+      } catch (err) {
+        console.warn('YouTube Player initialization notice:', err);
+      }
     }
 
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    if (window.YT && window.YT.Player) {
+      createPlayer();
+    } else {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
 
-    window.onYouTubeIframeAPIReady = () => {
-      if (!isCancelled) {
-        initPlayer();
-      }
-    };
-
-    function initPlayer() {
-      if (!containerRef.current) return;
-      playerRef.current = new window.YT.Player('peace-yt-player', {
-        height: '100%',
-        width: '100%',
-        videoId: session.media_id,
-        playerVars: {
-          autoplay: 0,
-          controls: 0, // Custom Peace controls for flawless sync
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          enablejsapi: 1,
-          origin: typeof window !== 'undefined' ? window.location.origin : '',
-        },
-        events: {
-          onReady: (event: any) => {
-            setIsPlayerReady(true);
-            const dur = typeof event.target.getDuration === 'function' ? event.target.getDuration() : 0;
-            if (dur > 0) setDuration(dur);
-            if (session.current_position > 0 && typeof event.target.seekTo === 'function') {
-              event.target.seekTo(session.current_position, true);
-            }
-          },
-          onStateChange: (event: any) => {
-            const playerState = event.data;
-            // YT.PlayerState: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
-            if (playerState === 1) {
-              setIsPlaying(true);
-              if (!isApplyingRemoteAction.current) {
-                const pos = safeGetCurrentTime();
-                broadcastPlay(pos);
-                updatePlaybackMutation.mutate({
-                  sessionId: session.id,
-                  position: pos,
-                  isPlaying: true,
-                });
-              }
-            } else if (playerState === 2) {
-              setIsPlaying(false);
-              if (!isApplyingRemoteAction.current) {
-                const pos = safeGetCurrentTime();
-                broadcastPause(pos);
-                updatePlaybackMutation.mutate({
-                  sessionId: session.id,
-                  position: pos,
-                  isPlaying: false,
-                });
-              }
-            }
-          },
-          onError: (event: any) => {
-            const code = event.data;
-            if (code === 101 || code === 150) {
-              setErrorMessage('This YouTube video owner does not allow embedded playback. Please try another video URL.');
-            } else if (code === 100) {
-              setErrorMessage('YouTube video not found or removed.');
-            } else {
-              setErrorMessage('Playback error on YouTube video. Try another link.');
-            }
-          },
-        },
-      });
+      window.onYouTubeIframeAPIReady = () => {
+        if (!isCancelled) {
+          createPlayer();
+        }
+      };
     }
 
     return () => {
@@ -257,13 +306,20 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
         }
       }
     };
-  }, [session.media_id, session.current_position, session.id, broadcastPlay, broadcastPause, updatePlaybackMutation, safeGetCurrentTime]);
+  }, [
+    session.media_id,
+    session.current_position,
+    session.id,
+    broadcastPlay,
+    broadcastPause,
+    updatePlaybackMutation,
+    safeGetCurrentTime,
+  ]);
 
-  // Track Playback Time, Presence, & Drift Calculation Loop
+  // Playback Time, Presence, & Drift Calculation Loop
   useEffect(() => {
     const interval = setInterval(() => {
       if (!playerRef.current || !isPlayerReady) return;
-      if (typeof playerRef.current.getCurrentTime !== 'function') return;
 
       const pos = safeGetCurrentTime();
       const dur = safeGetDuration();
@@ -311,22 +367,39 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPlayerReady, isPlaying, partnerPresence, session.id, updatePresence, setSyncStatus, setDriftSeconds, safeGetCurrentTime, safeGetDuration]);
+  }, [
+    isPlayerReady,
+    isPlaying,
+    partnerPresence,
+    session.id,
+    updatePresence,
+    setSyncStatus,
+    setDriftSeconds,
+    safeGetCurrentTime,
+    safeGetDuration,
+  ]);
 
-  // Local Controls
+  // Controls: Play / Pause
   const togglePlay = () => {
     if (!playerRef.current) return;
-    if (isPlaying) {
-      if (typeof playerRef.current.pauseVideo === 'function') {
-        playerRef.current.pauseVideo();
+    try {
+      if (isPlaying) {
+        if (typeof playerRef.current.pauseVideo === 'function') {
+          playerRef.current.pauseVideo();
+        }
+        setIsPlaying(false);
+      } else {
+        if (typeof playerRef.current.playVideo === 'function') {
+          playerRef.current.playVideo();
+        }
+        setIsPlaying(true);
       }
-    } else {
-      if (typeof playerRef.current.playVideo === 'function') {
-        playerRef.current.playVideo();
-      }
+    } catch (e) {
+      console.warn('Play/Pause toggle note:', e);
     }
   };
 
+  // Controls: Seek
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = parseFloat(e.target.value);
     setCurrentTime(target);
@@ -336,18 +409,50 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
     }
   };
 
+  // Controls: Mute / Unmute
   const toggleMute = () => {
     if (!playerRef.current) return;
-    if (isMuted) {
-      if (typeof playerRef.current.unMute === 'function') {
-        playerRef.current.unMute();
+    try {
+      if (isMuted) {
+        if (typeof playerRef.current.unMute === 'function') {
+          playerRef.current.unMute();
+        }
+        if (typeof playerRef.current.setVolume === 'function') {
+          playerRef.current.setVolume(100);
+        }
+        setIsMuted(false);
+      } else {
+        if (typeof playerRef.current.mute === 'function') {
+          playerRef.current.mute();
+        }
+        setIsMuted(true);
       }
-      setIsMuted(false);
+    } catch (e) {
+      console.warn('Mute toggle note:', e);
+    }
+  };
+
+  // Controls: Fullscreen Toggle
+  const toggleFullscreen = () => {
+    const el = playerWrapperRef.current;
+    if (!el) return;
+
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen();
+      } else if ((el as any).webkitRequestFullscreen) {
+        (el as any).webkitRequestFullscreen();
+      } else if ((el as any).msRequestFullscreen) {
+        (el as any).msRequestFullscreen();
+      }
     } else {
-      if (typeof playerRef.current.mute === 'function') {
-        playerRef.current.mute();
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
       }
-      setIsMuted(true);
     }
   };
 
@@ -359,9 +464,28 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
   return (
     <div className="space-y-4">
-      {/* 1. VIDEO PLAYER CONTAINER */}
-      <div className="relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-border shadow-2xl group">
+      {/* 1. VIDEO PLAYER WRAPPER */}
+      <div
+        ref={playerWrapperRef}
+        className={`relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-border shadow-2xl group ${
+          isFullscreen ? '!rounded-none !border-none !h-screen !w-screen !aspect-auto' : ''
+        }`}
+      >
+        {/* Actual YouTube IFrame Host */}
         <div ref={containerRef} id="peace-yt-player" className="w-full h-full" />
+
+        {/* Big Central Play Overlay when Paused */}
+        {!isPlaying && isPlayerReady && !errorMessage && (
+          <button
+            onClick={togglePlay}
+            aria-label="Play video"
+            className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 hover:bg-black/30 transition-all group-hover:scale-100"
+          >
+            <div className="w-20 h-20 rounded-full bg-primary/95 text-white flex items-center justify-center shadow-2xl transform transition-transform group-hover:scale-110 active:scale-95">
+              <Play className="w-9 h-9 fill-white ml-1" />
+            </div>
+          </button>
+        )}
 
         {/* Error Fallback Banner */}
         {errorMessage && (
@@ -398,7 +522,7 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
         </div>
 
         {/* Custom Peace Floating Controls */}
-        <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col space-y-2 opacity-95 group-hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent flex flex-col space-y-2 opacity-95 group-hover:opacity-100 transition-opacity">
           {/* Progress Seek Bar */}
           <input
             type="range"
@@ -412,33 +536,64 @@ export function YouTubePlayer({ session, onReactionTriggered }: YouTubePlayerPro
 
           <div className="flex items-center justify-between text-xs text-white">
             <div className="flex items-center space-x-3">
+              {/* Play / Pause Button */}
               <button
                 onClick={togglePlay}
+                type="button"
                 className="w-9 h-9 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-all shadow-md active:scale-95"
+                title={isPlaying ? 'Pause' : 'Play'}
               >
-                {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
+                {isPlaying ? (
+                  <Pause className="w-4 h-4 fill-white" />
+                ) : (
+                  <Play className="w-4 h-4 fill-white ml-0.5" />
+                )}
               </button>
 
+              {/* Mute / Unmute Button */}
               <button
                 onClick={toggleMute}
-                className="w-8 h-8 rounded-full bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center transition-all"
+                type="button"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  isMuted
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30'
+                    : 'bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white'
+                }`}
+                title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
 
+              {/* Time Display */}
               <span className="font-mono text-zinc-300 text-[11px]">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
 
             <div className="flex items-center space-x-2">
+              {/* Sync to Partner Button */}
               <button
                 onClick={() => broadcastSyncRequest()}
+                type="button"
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-[11px] font-semibold text-zinc-200 transition-all hover:border-primary/50"
                 title="Force Sync with Partner"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-primary" />
                 <span className="hidden sm:inline">Sync to Partner</span>
+              </button>
+
+              {/* Fullscreen Button */}
+              <button
+                onClick={toggleFullscreen}
+                type="button"
+                className="w-8 h-8 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white flex items-center justify-center transition-all hover:border-primary/50"
+                title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+              >
+                {isFullscreen ? (
+                  <Minimize className="w-4 h-4 text-primary" />
+                ) : (
+                  <Maximize className="w-4 h-4 text-zinc-300" />
+                )}
               </button>
             </div>
           </div>
