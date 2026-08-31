@@ -25,7 +25,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isSignedIn && user) {
       let isCancelled = false;
 
-      syncClerkUser()
+      syncClerkUser({
+        name: user.fullName || user.firstName || 'User',
+        email: user.primaryEmailAddress?.emailAddress || '',
+        avatar: user.imageUrl || '',
+        username: user.username || undefined,
+      })
         .then(({ user: appUser, partner, couple }) => {
           if (isCancelled) return;
           setSyncError('');

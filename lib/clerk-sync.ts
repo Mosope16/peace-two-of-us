@@ -6,17 +6,19 @@ export type ClerkSyncResult = {
   couple: Couple;
 };
 
-export async function syncClerkUser(): Promise<ClerkSyncResult> {
+export async function syncClerkUser(clientUserData?: Partial<User>): Promise<ClerkSyncResult> {
   const response = await fetch('/api/auth/sync-user', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: clientUserData ? JSON.stringify(clientUserData) : JSON.stringify({}),
   });
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
-    throw new Error(payload?.error || 'Could not sync your account.');
+    const message = payload?.error || `Sync failed with status ${response.status}`;
+    throw new Error(message);
   }
 
   return response.json();

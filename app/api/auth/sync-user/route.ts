@@ -1,4 +1,4 @@
-import { currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/server/supabase-admin';
 import { generateInviteCode, stableUuidFromClerkId } from '@/lib/server/auth-utils';
@@ -24,7 +24,7 @@ type CoupleRow = {
 
 function syncError(message: string, error: any) {
   console.error(`[auth/sync-user] ${message}`, error);
-  const detail = error?.message || error?.details || JSON.stringify(error) || message;
+  const detail = error?.message || error?.details || (typeof error === 'object' ? JSON.stringify(error) : String(error));
   return NextResponse.json({ error: `${message} (${detail})` }, { status: 500 });
 }
 
@@ -51,30 +51,44 @@ function fallbackCouple(appUser: User): Couple {
   };
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const clerkUser = await currentUser();
+    const { userId } = await auth();
 
-    if (!clerkUser) {
+    if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress;
+    const body = await req.json().catch(() => ({}));
 
-    if (!primaryEmail) {
-      return NextResponse.json(
-        { error: 'Your account does not have a primary email address.' },
-        { status: 400 }
-      );
+    let clerkUser: any = null;
+    try {
+      clerkUser = await currentUser();
+    } catch (clerkErr) {
+      console.warn('[auth/sync-user] Clerk currentUser() fetch failed, falling back to session claims & client payload:', clerkErr);
     }
 
+    const primaryEmail =
+      clerkUser?.primaryEmailAddress?.emailAddress ||
+      body.email ||
+      `user-${userId}@peace.app`;
+
+    const name =
+      clerkUser?.fullName ||
+      clerkUser?.firstName ||
+      body.name ||
+      primaryEmail.split('@')[0];
+
+    const avatar = clerkUser?.imageUrl || body.avatar || '';
+    const username = clerkUser?.username || body.username || undefined;
+
     let appUser: User = {
-      id: stableUuidFromClerkId(clerkUser.id),
-      name: clerkUser.fullName || clerkUser.firstName || primaryEmail.split('@')[0],
-      username: clerkUser.username || undefined,
+      id: stableUuidFromClerkId(userId),
+      name,
+      username,
       email: primaryEmail,
-      avatar: clerkUser.imageUrl || '',
-      created_at: clerkUser.createdAt ? new Date(clerkUser.createdAt).toISOString() : new Date().toISOString(),
+      avatar,
+      created_at: clerkUser?.createdAt ? new Date(clerkUser.createdAt).toISOString() : new Date().toISOString(),
     };
 
     const supabase = createSupabaseAdminClient();
@@ -122,7 +136,7 @@ export async function POST() {
       return syncError('Could not save user profile.', upsertUserError);
     }
 
-    // 3. Fetch Couple without relation embedding to avoid postgREST schema issues
+    // 3. Fetch Couple
     const { data: existingCouples, error: coupleFetchError } = await supabase
       .from('couples')
       .select('*')
