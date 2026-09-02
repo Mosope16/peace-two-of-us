@@ -26,13 +26,13 @@ export function HeroSection() {
           <div className="flex items-center space-x-4 sm:space-x-6">
             <div className="relative flex-shrink-0">
               <img
-                src={couple.partner_one.avatar}
+                src={couple.partner_one.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(couple.partner_one.name)}&background=random`}
                 alt={couple.partner_one.name}
                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-primary/20 shadow-lg"
               />
               {couple.partner_two && (
                 <img
-                  src={couple.partner_two.avatar}
+                  src={couple.partner_two.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(couple.partner_two.name)}&background=random`}
                   alt={couple.partner_two.name}
                   className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-background shadow-lg"
                 />

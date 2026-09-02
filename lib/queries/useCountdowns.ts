@@ -94,11 +94,18 @@ export function useAddCountdown() {
       // 1. Broadcast to partner
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'countdown_updated',
           payload: { action: 'add', item: newCountdown },
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Broadcast countdown error:', err);
       }
@@ -188,11 +195,18 @@ export function useUpdateCountdown() {
       // 1. Broadcast update to partner
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'countdown_updated',
           payload: { action: 'update', id, updates },
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Broadcast update countdown error:', err);
       }
@@ -244,11 +258,18 @@ export function useDeleteCountdown() {
       // 1. Broadcast delete to partner
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'countdown_updated',
           payload: { action: 'delete', id },
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Broadcast delete countdown error:', err);
       }

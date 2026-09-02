@@ -119,7 +119,7 @@ export default function Navbar() {
                   className="flex items-center space-x-2 p-1.5 rounded-lg bg-surface border border-border hover:border-primary/40 text-xs text-zinc-200 transition-all shrink-0"
                 >
                   <img
-                    src={currentUser.avatar}
+                    src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=random`}
                     alt={currentUser.name}
                     className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/50 shrink-0"
                   />

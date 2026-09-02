@@ -98,11 +98,18 @@ export function useSetMood() {
       // 1. Instant Realtime Broadcast to Partner's Screen
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'mood_updated',
           payload: newMoodLog,
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Realtime broadcast error:', err);
       }

@@ -134,6 +134,7 @@ export default function WatchTogetherPage() {
               <YouTubePlayer
                 session={activeSession}
                 onReactionTriggered={handleTriggerReaction}
+                onChangeVideo={() => setIsCreateModalOpen(true)}
               />
             </div>
 

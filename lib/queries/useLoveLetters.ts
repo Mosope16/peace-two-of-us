@@ -53,10 +53,12 @@ export function useLoveLetters() {
       }
 
       // 2. Fallback to Local Storage
-      const local = getLocalLetters(coupleId);
-      if (local.length > 0) return local;
+      const rawLocal = typeof window !== 'undefined' ? localStorage.getItem(`ldr_letters_${coupleId}`) : null;
+      if (rawLocal !== null) {
+        return JSON.parse(rawLocal);
+      }
 
-      // Default sample letter
+      // Default sample letter (only for first time ever)
       const defaultLetters: LoveLetter[] = [
         {
           id: 'sample-letter-1',
@@ -95,11 +97,18 @@ export function useAddLoveLetter() {
       // 1. Broadcast to partner
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'letter_updated',
           payload: { action: 'add', letter: newLetter },
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Broadcast letter error:', err);
       }
@@ -172,21 +181,27 @@ export function useDeleteLoveLetter() {
       // 1. Broadcast delete to partner
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'letter_updated',
           payload: { action: 'delete', letterId },
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Broadcast delete letter error:', err);
       }
 
-      // 2. Persist to Supabase if valid UUID
-      if (isSupabaseConfigured() && isValidUUID(letterId)) {
-        try {
-          await supabase.from('love_letters').delete().eq('id', letterId);
-        } catch (e) {
-          console.warn('Supabase delete letter failed:', e);
+      // 2. Persist to Supabase
+      if (isSupabaseConfigured()) {
+        const { error } = await supabase.from('love_letters').delete().eq('id', letterId);
+        if (error) {
+          console.warn('Supabase delete letter warning:', error.message);
         }
       }
 

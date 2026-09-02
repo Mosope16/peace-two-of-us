@@ -106,11 +106,18 @@ export function useAddBucketItem() {
       // 1. Broadcast to partner
       try {
         const roomChannel = supabase.channel(`couple-room-${coupleId}`);
-        roomChannel.send({
-          type: 'broadcast',
+        const msg = {
+          type: 'broadcast' as const,
           event: 'bucket_updated',
           payload: { action: 'add', item: newItem },
-        });
+        };
+        // @ts-ignore
+        if (typeof roomChannel.httpSend === 'function') {
+          // @ts-ignore
+          roomChannel.httpSend(msg.event, msg.payload);
+        } else {
+          roomChannel.send(msg);
+        }
       } catch (err) {
         console.warn('Broadcast bucket error:', err);
       }

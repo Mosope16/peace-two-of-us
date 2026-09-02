@@ -284,7 +284,7 @@ export function useWatchRealtimeEngine(
   const queryClient = useQueryClient();
   const { currentUser } = useLDRStore();
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const sequenceRef = useRef<number>(0);
+  const sequenceRef = useRef<number>(Date.now());
   const lastProcessedSequenceRef = useRef<number>(0);
   const [partnerPresence, setPartnerPresence] = useState<WatchPresenceState | null>(null);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'catching_up' | 'offline'>('synced');
@@ -451,12 +451,10 @@ export function useWatchRealtimeEngine(
           lastProcessedSequenceRef.current = payload.sequence;
         }
 
-        const now = Date.now();
-        const latencySec = Math.max(0, (now - payload.sent_at) / 1000);
+        const adjustedPos = ('position' in payload && typeof payload.position === 'number') ? payload.position : 0;
 
         switch (payload.type) {
           case 'PLAY': {
-            const adjustedPos = payload.position + latencySec;
             callbacksRef.current.onPlay(adjustedPos, payload.sequence);
             break;
           }
@@ -490,7 +488,6 @@ export function useWatchRealtimeEngine(
           }
           case 'SYNC_RESPONSE': {
             if (payload.requester_id === currentUser.id) {
-              const adjustedPos = payload.is_playing ? payload.position + latencySec : payload.position;
               callbacksRef.current.onSyncResponse(adjustedPos, payload.is_playing, payload.sequence);
             }
             break;
@@ -593,7 +590,7 @@ export function useWatchRealtimeEngine(
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [sessionId, currentUser?.id, broadcastSyncRequest, queryClient]);
+  }, [sessionId, currentUser?.id, currentUser?.name, currentUser?.avatar, broadcastSyncRequest, queryClient]);
 
   return {
     broadcastPlay,

@@ -79,7 +79,9 @@ export async function POST(req: Request) {
       body.name ||
       primaryEmail.split('@')[0];
 
-    const avatar = clerkUser?.imageUrl || body.avatar || '';
+    const googleAccount = clerkUser?.externalAccounts?.find((a: any) => a.provider === 'oauth_google' || a.provider === 'google');
+    const googleAvatar = googleAccount?.imageUrl || googleAccount?.avatarUrl;
+    const avatar = googleAvatar || clerkUser?.imageUrl || body.avatar || '';
     const username = clerkUser?.username || body.username || undefined;
 
     let appUser: User = {

@@ -22,10 +22,13 @@ export default function LoginPage() {
 
     let isCancelled = false;
 
+    const googleAccount = user.externalAccounts?.find(a => (a as any).provider === 'oauth_google' || (a as any).provider === 'google');
+    const googleAvatar = googleAccount?.imageUrl || (googleAccount as any)?.avatarUrl;
+
     syncClerkUser({
       name: user.fullName || user.firstName || 'User',
       email: user.primaryEmailAddress?.emailAddress || '',
-      avatar: user.imageUrl || '',
+      avatar: googleAvatar || user.imageUrl || '',
       username: user.username || undefined,
     })
       .then(({ user: appUser, partner, couple }) => {

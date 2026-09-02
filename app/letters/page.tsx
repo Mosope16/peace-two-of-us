@@ -78,7 +78,7 @@ export default function LoveLettersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {loveLetters.map((letter) => {
+          {loveLetters.map((letter: LoveLetter) => {
             const locked = isLetterLocked(letter.unlock_date);
             const countdown = letter.unlock_date ? calculateCountdownDays(letter.unlock_date) : null;
             const isAuthor = letter.created_by === currentUser.id;

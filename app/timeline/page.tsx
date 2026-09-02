@@ -6,6 +6,7 @@ import { useLDRStore } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
 import { useLoveLetters } from '@/lib/queries/useLoveLetters';
 import { useBucketList } from '@/lib/queries/useBucketList';
+import { LoveLetter } from '@/types';
 
 export default function TimelinePage() {
   const { couple } = useLDRStore();
@@ -39,7 +40,7 @@ export default function TimelinePage() {
   }
 
   // Add Love Letters
-  loveLetters.forEach((letter) => {
+  loveLetters.forEach((letter: LoveLetter) => {
     timelineItems.push({
       id: `tl-${letter.id}`,
       type: 'letter',
