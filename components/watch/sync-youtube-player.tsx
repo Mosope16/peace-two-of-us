@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Sparkles,
   Users,
+  ExternalLink,
 } from 'lucide-react';
 import { WatchEvent, PlayerState, PartnerPresence } from '@/lib/watch/use-watch-sync';
 
@@ -152,7 +153,6 @@ export default function SyncYouTubePlayer({
       try {
         playerRef.current = new window.YT.Player(containerRef.current, {
           videoId,
-          host: 'https://www.youtube-nocookie.com',
           playerVars: {
             autoplay: 0,
             controls: 0, // Disable native YouTube controls: Peace owns the UI
@@ -161,7 +161,7 @@ export default function SyncYouTubePlayer({
             rel: 0,
             modestbranding: 1,
             enablejsapi: 1,
-            origin: typeof window !== 'undefined' ? window.location.origin : '',
+            origin: typeof window !== 'undefined' ? window.location.origin : undefined,
           },
           events: {
             onReady: (event: any) => {
@@ -174,7 +174,7 @@ export default function SyncYouTubePlayer({
             },
             onStateChange: handlePlayerStateChange,
             onError: (event: any) => {
-              console.error('[Peace Watch] YouTube player error code:', event.data);
+              console.warn('[Peace Watch] YouTube player event error code:', event.data);
               switch (event.data) {
                 case 2:
                   setErrorMessage('Invalid YouTube video parameter or URL.');
@@ -188,7 +188,7 @@ export default function SyncYouTubePlayer({
                 case 101:
                 case 150:
                   setErrorMessage(
-                    'The owner of this video has disabled embedded playback. Please choose another video.'
+                    'The owner of this video has disabled embedded playback outside YouTube. Please choose another video or open it directly.'
                   );
                   break;
                 default:
@@ -609,14 +609,25 @@ export default function SyncYouTubePlayer({
               <h4 className="text-white font-bold text-base">Video Playback Blocked</h4>
               <p className="text-xs text-zinc-400">{errorMessage}</p>
             </div>
-            {onChangeVideo && (
-              <button
-                onClick={onChangeVideo}
-                className="px-4 py-2 rounded-xl bg-primary text-black font-semibold text-xs hover:opacity-90 transition shadow-lg active:scale-95"
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              {onChangeVideo && (
+                <button
+                  onClick={onChangeVideo}
+                  className="px-4 py-2 rounded-xl bg-primary text-black font-semibold text-xs hover:opacity-90 transition shadow-lg active:scale-95"
+                >
+                  Choose Another Video
+                </button>
+              )}
+              <a
+                href={`https://www.youtube.com/watch?v=${videoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs flex items-center space-x-1.5 transition border border-zinc-700"
               >
-                Choose Another Video
-              </button>
-            )}
+                <span>Watch on YouTube</span>
+                <ExternalLink size={13} />
+              </a>
+            </div>
           </div>
         )}
 
